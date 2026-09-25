@@ -1,0 +1,3194 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ziran Nordeste — Sistema RH</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --red: #CC0000;
+    --red-dark: #A00000;
+    --red-light: #FFEDED;
+    --red-mid: #E11D2D;
+    --amber: #F59E0B;
+    --amber-light: #FFF8E7;
+    --bg: #0F0F0F;
+    --bg2: #1A1A1A;
+    --bg3: #242424;
+    --bg4: #2E2E2E;
+    --border: #333;
+    --border2: #444;
+    --text: #F0F0F0;
+    --text2: #A0A0A0;
+    --text3: #666;
+    --green: #22C55E;
+    --green-light: #16a34a;
+    --blue: #3B82F6;
+    --orange: #F97316;
+    --purple: #A855F7;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
+
+  /* HEADER */
+  .header { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; align-items: center; gap: 20px; height: 56px; position: sticky; top: 0; z-index: 100; }
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .logo-icon { width: 32px; height: 32px; background: var(--red); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 13px; color: #fff; letter-spacing: -1px; }
+  .logo-text { font-size: 14px; font-weight: 600; color: var(--text); }
+  .logo-sub { font-size: 11px; color: var(--text2); }
+  .header-divider { flex: 1; }
+  .header-tag { font-size: 11px; color: var(--text3); background: var(--bg3); border: 1px solid var(--border); padding: 3px 10px; border-radius: 20px; }
+
+  /* NAV TABS */
+  .nav { background: var(--bg2); border-bottom: 1px solid var(--border); display: flex; gap: 0; padding: 0 24px; overflow-x: auto; }
+  .nav-tab { padding: 12px 20px; font-size: 13px; font-weight: 500; color: var(--text2); cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; transition: all 0.15s; display: flex; align-items: center; gap: 6px; user-select: none; }
+  .nav-tab:hover { color: var(--text); background: var(--bg3); }
+  .nav-tab.active { color: var(--red); border-bottom-color: var(--red); }
+  .nav-tab svg { width: 14px; height: 14px; }
+
+  /* MAIN */
+  .main { padding: 24px; max-width: 1400px; margin: 0 auto; }
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* CARDS GRID */
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 24px; }
+  .kpi { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+  .kpi-label { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .kpi-value { font-size: 26px; font-weight: 700; }
+  .kpi-sub { font-size: 11px; color: var(--text2); margin-top: 4px; }
+  .kpi.red .kpi-value { color: var(--red); }
+  .kpi.green .kpi-value { color: var(--green); }
+  .kpi.amber .kpi-value { color: var(--amber); }
+  .kpi.blue .kpi-value { color: var(--blue); }
+
+  /* SECTION */
+  .section-title { font-size: 13px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+  .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* TOOLBAR */
+  .toolbar { display: flex; gap: 10px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
+  .btn { padding: 7px 14px; border-radius: 7px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s; }
+  .btn-primary { background: var(--red); color: #fff; }
+  .btn-primary:hover { background: var(--red-dark); }
+  .btn-ghost { background: var(--bg3); color: var(--text); border: 1px solid var(--border); }
+  .btn-ghost:hover { background: var(--bg4); }
+  .btn-amber { background: var(--amber); color: #000; }
+  .btn-amber:hover { filter: brightness(0.9); }
+  .search { background: var(--bg3); border: 1px solid var(--border); border-radius: 7px; padding: 7px 12px; color: var(--text); font-size: 13px; outline: none; flex: 1; min-width: 180px; }
+  .search:focus { border-color: var(--red); }
+  select.filter { background: var(--bg3); border: 1px solid var(--border); border-radius: 7px; padding: 7px 10px; color: var(--text); font-size: 13px; outline: none; cursor: pointer; }
+
+  /* TABLE */
+  .table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { background: var(--bg3); color: var(--text2); font-weight: 600; padding: 10px 14px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--bg3); }
+  tr.desligado td { opacity: 0.45; }
+
+  /* BADGES */
+  .badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+  .badge-green { background: #14532d22; color: var(--green); border: 1px solid #16a34a44; }
+  .badge-red { background: #7f1d1d22; color: #f87171; border: 1px solid #dc262644; }
+  .badge-amber { background: #78350f22; color: var(--amber); border: 1px solid #d9770644; }
+  .badge-blue { background: #1e3a5f22; color: var(--blue); border: 1px solid #3b82f644; }
+  .badge-purple { background: #4c1d9522; color: var(--purple); border: 1px solid #a855f744; }
+  .badge-gray { background: var(--bg3); color: var(--text2); border: 1px solid var(--border); }
+
+  /* AVATAR */
+  .avatar { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+
+  /* MODAL */
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 200; display: none; align-items: center; justify-content: center; padding: 20px; }
+  .overlay.open { display: flex; }
+  .modal { background: var(--bg2); border: 1px solid var(--border2); border-radius: 14px; width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto; }
+  .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px 16px; border-bottom: 1px solid var(--border); }
+  .modal-title { font-size: 15px; font-weight: 700; }
+  .modal-close { background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; width: 28px; height: 28px; cursor: pointer; color: var(--text); font-size: 16px; display: flex; align-items: center; justify-content: center; }
+  .modal-body { padding: 24px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .form-row.full { grid-template-columns: 1fr; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-label { font-size: 12px; font-weight: 600; color: var(--text2); }
+  .form-input { background: var(--bg3); border: 1px solid var(--border); border-radius: 7px; padding: 8px 12px; color: var(--text); font-size: 13px; outline: none; }
+  .form-input:focus { border-color: var(--red); }
+  .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; }
+
+  /* ORGANOGRAMA */
+  .org-wrap { overflow: auto; background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 24px; min-height: 400px; }
+  .org-tree { display: flex; flex-direction: column; align-items: center; gap: 0; }
+  .org-level { display: flex; gap: 20px; align-items: flex-start; justify-content: center; flex-wrap: wrap; position: relative; }
+  .org-level::before { content: ''; position: absolute; top: -20px; left: 50%; width: 2px; height: 20px; background: var(--border); }
+  .org-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; min-width: 160px; max-width: 190px; text-align: center; position: relative; cursor: pointer; transition: all 0.15s; }
+  .org-card:hover { border-color: var(--red); transform: translateY(-2px); }
+  .org-card.top { border-color: var(--red); background: #1a0000; }
+  .org-card.supervisor { border-color: var(--amber); background: #1a1200; }
+  .org-avatar { width: 40px; height: 40px; border-radius: 50%; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
+  .org-name { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+  .org-role { font-size: 11px; color: var(--text2); margin-bottom: 6px; }
+  .org-connector { width: 2px; height: 30px; background: var(--border); margin: 0 auto; }
+  .org-drag-card { background:var(--bg3); border:1px solid var(--border); border-radius:7px; padding:8px 10px; cursor:grab; transition:all 0.12s; }
+  .org-drag-card:hover { background:var(--bg4); border-color:var(--border2); }
+  .org-drag-card:active { cursor:grabbing; }
+  .org-drop-cell.org-cell-over { background:var(--bg4) !important; outline:2px dashed var(--red); outline-offset:-2px; }
+  .org-drop-hint { border:1px dashed var(--border); border-radius:5px; padding:4px 8px; font-size:10px; color:var(--text3); text-align:center; margin-top:2px; }
+  .org-drop-cell:has(.org-drag-card) .org-drop-hint { display:none; }
+  .org-cell-over .org-drop-hint { display:block !important; border-color:var(--red); color:var(--red); }
+  .org-branches { display: flex; justify-content: center; gap: 20px; position: relative; }
+  .org-branches::before { content: ''; position: absolute; top: 0; left: calc(15% + 95px); right: calc(15% + 95px); height: 2px; background: var(--border); }
+  .org-branch { display: flex; flex-direction: column; align-items: center; }
+  .org-branch-line { width: 2px; height: 20px; background: var(--border); }
+
+  /* HORARIOS */
+  .sched-grid { display: grid; gap: 3px; overflow-x: auto; }
+  .sched-header { display: grid; gap: 3px; font-size: 11px; color: var(--text3); padding: 0 0 6px; }
+  .sched-row { display: grid; gap: 3px; align-items: center; min-height: 36px; }
+  .sched-cell { height: 30px; border-radius: 4px; background: var(--bg3); border: 1px solid var(--border); }
+  .sched-cell.worked { background: var(--red); border-color: var(--red-dark); }
+  .sched-cell.break { background: var(--amber); border-color: #d97706; opacity: 0.6; }
+  .sched-name { font-size: 12px; font-weight: 500; padding: 0 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* FÉRIAS */
+  .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+  .cal-header-cell { text-align: center; font-size: 11px; color: var(--text3); padding: 6px 0; }
+  .cal-day { height: 60px; background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; padding: 4px 6px; cursor: pointer; transition: all 0.15s; overflow: hidden; }
+  .cal-day:hover { border-color: var(--border2); }
+  .cal-day.today { border-color: var(--blue); }
+  .cal-day.has-event { background: #1a0000; border-color: var(--red); }
+  .cal-day-num { font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 2px; }
+  .cal-event { font-size: 10px; color: var(--red); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; }
+  .cal-event.ferias { color: var(--green); }
+  .cal-event.demissao { color: #f87171; }
+  .cal-event.promocao { color: var(--amber); }
+
+  /* PROGRAMAÇÕES */
+  .prog-list { display: flex; flex-direction: column; gap: 10px; }
+  .prog-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 14px 18px; display: flex; align-items: center; gap: 14px; transition: all 0.15s; }
+  .prog-card:hover { border-color: var(--border2); }
+  .prog-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+  .prog-icon.ferias { background: #14532d22; color: var(--green); }
+  .prog-icon.demissao { background: #7f1d1d22; color: #f87171; }
+  .prog-icon.promocao { background: #78350f22; color: var(--amber); }
+  .prog-icon.movimentacao { background: #1e3a5f22; color: var(--blue); }
+  .prog-info { flex: 1; }
+  .prog-nome { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+  .prog-detalhe { font-size: 12px; color: var(--text2); }
+  .prog-data { font-size: 12px; color: var(--text3); text-align: right; min-width: 80px; }
+  .prog-status { }
+
+  /* SETORES */
+  .setor-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+  .setor-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+  .setor-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .setor-name { font-size: 14px; font-weight: 700; }
+  .setor-count { font-size: 12px; color: var(--text2); }
+  .setor-members { display: flex; flex-direction: column; gap: 6px; }
+  .setor-member { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--border); }
+  .setor-member:last-child { border-bottom: none; }
+  .setor-member-info { flex: 1; }
+  .setor-member-name { font-size: 12px; font-weight: 500; }
+  .setor-member-role { font-size: 11px; color: var(--text2); }
+  .setor-member-sal { font-size: 12px; color: var(--green); font-weight: 600; }
+
+  /* HORARIO VISUAL */
+  .turno-block { display: inline-block; width: 20px; height: 20px; border-radius: 3px; border: 1px solid var(--border3, #444); cursor: pointer; transition: background 0.1s; }
+  .turno-block.on { background: var(--red); border-color: var(--red-dark); }
+  .turno-block.off { background: var(--bg3); }
+
+  /* IMPORT ZONE */
+  .import-zone { border: 2px dashed var(--border2); border-radius: 12px; padding: 40px; text-align: center; cursor: pointer; transition: all 0.2s; margin-bottom: 20px; }
+  .import-zone:hover, .import-zone.drag { border-color: var(--red); background: #1a000022; }
+  .import-icon { font-size: 40px; margin-bottom: 12px; }
+  .import-title { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+  .import-sub { font-size: 13px; color: var(--text2); }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--bg2); border: 1px solid var(--border2); border-radius: 10px; padding: 12px 18px; font-size: 13px; z-index: 999; display: none; align-items: center; gap: 10px; max-width: 320px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+  .toast.show { display: flex; }
+  .toast.success { border-color: #16a34a44; }
+  .toast.error { border-color: var(--red); }
+
+  /* RESPONSIVE */
+  /* KANBAN */
+  .kb-col { background:var(--bg2); border:1px solid var(--border); border-radius:10px; min-width:210px; max-width:230px; flex-shrink:0; display:flex; flex-direction:column; transition:box-shadow 0.15s; }
+  .kb-col.kb-over { box-shadow:0 0 0 2px var(--red); border-color:var(--red); }
+  .kb-col-header { padding:12px 14px 10px; border-bottom:1px solid var(--border); }
+  .kb-count { font-size:11px; font-weight:700; padding:2px 8px; border-radius:20px; }
+  .kb-cards { padding:8px; display:flex; flex-direction:column; gap:6px; min-height:80px; flex:1; }
+  .kb-card { background:var(--bg3); border:1px solid var(--border); border-radius:8px; padding:10px; cursor:grab; user-select:none; transition:all 0.15s; }
+  .kb-card:hover { border-color:var(--border2); background:var(--bg4); }
+  .kb-card:active { cursor:grabbing; }
+  .kb-card.kb-desl { opacity:0.5; }
+  .kb-drop-zone { border:1px dashed var(--border); border-radius:6px; padding:10px; text-align:center; font-size:11px; color:var(--text3); margin-top:4px; transition:all 0.15s; }
+  .kb-drop-zone.kb-drop-active { border-color:var(--red); color:var(--red); background:#1a000022; }
+  .kb-edit-btn { background:none; border:none; color:var(--text3); cursor:pointer; font-size:13px; padding:0 2px; opacity:0.6; }
+  .kb-edit-btn:hover { color:var(--text); opacity:1; }
+  /* QUADRO VISUAL GRADE */
+  .qv-origem { display:flex; flex-wrap:wrap; gap:7px; background:var(--bg2); border:1px solid var(--border); border-radius:10px; padding:12px; min-height:54px; }
+  .qv-chip { display:flex; align-items:center; gap:6px; background:var(--bg3); border:1px solid var(--border); border-radius:7px; padding:5px 9px; cursor:grab; user-select:none; transition:all 0.12s; }
+  .qv-chip:hover { border-color:var(--border2); background:var(--bg4); }
+  .qv-chip:active { cursor:grabbing; }
+  .qv-chip-placed { background:var(--bg2); }
+  .qv-table { border-collapse:collapse; width:100%; min-width:700px; }
+  .qv-th-func { background:var(--bg3); border:1px solid var(--border); padding:10px 14px; text-align:left; font-size:11px; font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:0.4px; min-width:150px; }
+  .qv-th-setor { background:var(--bg2); border:1px solid var(--border); padding:10px 16px; text-align:center; min-width:220px; }
+  .qv-td-func { background:var(--bg3); border:1px solid var(--border); padding:8px 14px; font-size:12px; font-weight:700; color:var(--text); white-space:nowrap; }
+  .qv-td-cell { border:1px solid var(--border); padding:6px; vertical-align:top; min-width:220px; transition:background 0.12s; }
+  .qv-td-cell.qv-over { background:var(--bg4); outline:2px dashed var(--red); outline-offset:-2px; }
+  .qv-td-new { background:var(--bg2); opacity:0.6; }
+  .qv-td-new.qv-over { opacity:1; background:var(--bg3); outline:2px dashed var(--border2); outline-offset:-2px; }
+  .qv-cell-inner { display:flex; flex-direction:column; gap:5px; }
+  .qv-drop-hint { border:1px dashed var(--border); border-radius:5px; padding:5px 8px; font-size:10px; color:var(--text3); text-align:center; }
+  .qv-cell-inner:has(.qv-chip-placed) .qv-drop-hint { display:none; }
+
+  .kb-col-depot .kb-col-header { background: #1a0000; }
+  .kb-col-arm .kb-col-header { background: #001020; }
+  .kb-col-transp .kb-col-header { background: #001a08; }
+  .kb-col-sem { border-style: dashed; opacity: 0.85; }
+  .kb-col-sem .kb-col-header { background: var(--bg3); }
+  .kb-col { min-width: 230px; max-width: 260px; }
+
+  @media (max-width: 600px) {
+    .main { padding: 14px; }
+    .form-row { grid-template-columns: 1fr; }
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  /* TABS WITHIN PAGE */
+  .page-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+  .page-tab { padding: 8px 18px; font-size: 13px; color: var(--text2); cursor: pointer; border-bottom: 2px solid transparent; }
+  .page-tab:hover { color: var(--text); }
+  .page-tab.active { color: var(--amber); border-bottom-color: var(--amber); }
+
+  .sub-page { display: none; }
+  .sub-page.active { display: block; }
+
+  .empty { text-align: center; padding: 40px; color: var(--text3); font-size: 13px; }
+  .empty svg { width: 40px; height: 40px; opacity: 0.3; margin-bottom: 10px; }
+  /* ORGANOGRAMA */
+  .org-node{position:absolute;width:168px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;cursor:grab;user-select:none;box-shadow:0 2px 8px rgba(0,0,0,.3);transition:box-shadow .12s,border-color .12s}
+  .org-node:hover{border-color:var(--border2);box-shadow:0 4px 18px rgba(0,0,0,.55)}
+  .org-node.on{border-color:var(--amber);box-shadow:0 0 0 2px #F59E0B44}
+  .org-node.lsrc{border-color:var(--amber);box-shadow:0 0 0 3px #F59E0B55}
+  .org-node.ltgt:hover{border-color:var(--green);box-shadow:0 0 0 3px #22C55E44;cursor:crosshair}
+  .org-node.dragging{opacity:.7;box-shadow:0 12px 40px rgba(0,0,0,.7);z-index:999;cursor:grabbing}
+  .on-bar{display:none}
+  .on-body{padding:9px 10px 10px}
+  .on-name{font-size:12px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:2px}
+  .on-cargo{font-size:10px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .on-tags{display:flex;align-items:center;gap:4px;margin-top:6px;flex-wrap:wrap}
+  .on-tag{font-size:9px;font-weight:700;padding:1px 7px;border-radius:10px}
+  .on-sal{font-size:10px;color:var(--green);font-family:monospace;font-weight:600}
+  .on-btns{position:absolute;top:6px;right:6px;display:none;gap:2px}
+  .org-node:hover .on-btns,.org-node.on .on-btns{display:flex}
+  .on-btn{width:18px;height:18px;border-radius:4px;background:var(--bg4);border:1px solid var(--border);color:var(--text2);cursor:pointer;font-size:9px;display:flex;align-items:center;justify-content:center;padding:0}
+  .on-btn:hover{color:var(--text);background:var(--bg3)}
+  #page-organograma.org-hide-sal .on-sal{display:none!important}
+  .org-node.drop-target{border-color:var(--green)!important;box-shadow:0 0 0 3px #22C55E55!important;transform:scale(1.04)}
+  .org-node.drop-sibling{border-color:var(--blue)!important;box-shadow:0 0 0 3px #3B82F655!important}
+  .org-node.dragging{z-index:999;opacity:.85;box-shadow:0 14px 44px rgba(0,0,0,.75);pointer-events:none}
+  .org-node{border-left-width:5px}
+  /* FAIXAS DE NÍVEL */
+  .org-band{position:absolute;border-top:1px dashed #ffffff1f;pointer-events:none;transition:background .12s,box-shadow .12s}
+  .org-band:nth-child(odd){background:#ffffff05}
+  .org-band:nth-child(even){background:#ffffff0b}
+  .org-band.hot{background:#F59E0B14!important;box-shadow:inset 0 0 0 2px #F59E0B88}
+  .org-band-lbl{position:absolute;left:14px;top:10px;display:flex;flex-direction:column;gap:3px}
+  .org-band-tit{font-size:15px;font-weight:800;letter-spacing:.08em;color:var(--text);opacity:.85}
+  .org-band-sub{font-size:11px;color:var(--text3)}
+  .org-band-num{display:inline-block;width:22px;height:22px;border-radius:6px;background:var(--amber);color:#111;font-size:12px;font-weight:800;text-align:center;line-height:22px;margin-right:8px}
+  #page-organograma.org-hide-sal .band-sal{display:none}
+  .nivel-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;border:1px solid var(--border);color:var(--text2);white-space:nowrap}
+  @media print{
+    .header,.nav,#org-toolbar,#org-zoom{display:none!important}
+    .page{display:none!important}
+    #page-organograma.active{display:block!important}
+    #org-wrap{height:100vh!important}
+    body{background:#111!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .on-btns{display:none!important}
+  }
+  /* ===== OCORRÊNCIAS ===== */
+  .oc-filtros{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+  .oc-kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;margin-bottom:18px}
+  .oc-kpi{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 14px 12px;position:relative;overflow:hidden}
+  .oc-kpi::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--c)}
+  .oc-kpi-l{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:6px}
+  .oc-kpi-v{font-size:28px;font-weight:800;color:var(--text);margin-top:4px;line-height:1.1}
+  .oc-kpi-s{font-size:11px;color:var(--text3);margin-top:3px}
+  .oc-sw{display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--c);flex:none}
+  .oc-grid{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:18px}
+  @media(max-width:1000px){.oc-grid{grid-template-columns:1fr}}
+  .oc-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px}
+  .oc-card-t{font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px}
+  .oc-card-s{font-size:11px;color:var(--text3);margin-bottom:10px}
+  .oc-leg{display:flex;flex-wrap:wrap;gap:6px 14px;margin-bottom:8px}
+  .oc-leg span{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2)}
+  .oc-card svg text{font-family:'Segoe UI',system-ui,sans-serif}
+  #oc-tip{position:fixed;z-index:6000;pointer-events:none;background:#0b0b0b;border:1px solid var(--border2);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--text);box-shadow:0 6px 24px rgba(0,0,0,.6);display:none;min-width:150px}
+  #oc-tip .t{font-weight:700;margin-bottom:4px}
+  #oc-tip .r{display:flex;align-items:center;gap:6px;color:var(--text2)} #oc-tip .r b{margin-left:auto;color:var(--text);padding-left:12px}
+  .oc-badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--text);white-space:nowrap}
+  .oc-tab{width:100%;border-collapse:collapse;font-size:12px}
+  .oc-tab th{text-align:left;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;padding:8px;border-bottom:1px solid var(--border);white-space:nowrap}
+  .oc-tab td{padding:8px;border-bottom:1px solid var(--border);color:var(--text)}
+  .oc-tab td.n{text-align:center;font-variant-numeric:tabular-nums}
+  .oc-tab tr:hover td{background:var(--bg3)}
+  .oc-det{color:var(--text2);font-size:11px}
+  .bk-box{background:var(--bg2);border:1px solid var(--border);border-left:4px solid var(--amber);border-radius:10px;padding:16px 18px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+  .bk-t{font-size:14px;font-weight:700;color:var(--text)}
+  .bk-s{font-size:12px;color:var(--text2);margin-top:3px}
+  .bk-btns{display:flex;gap:10px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo">
+    <div class="logo-icon">ZN</div>
+    <div>
+      <div class="logo-text">ZIRAN NORDESTE</div>
+      <div class="logo-sub">Porto de Suape • RH & Pessoal</div>
+    </div>
+  </div>
+  <div class="header-divider"></div>
+  <div class="header-tag" id="last-update">Última atualização: —</div>
+</div>
+
+<!-- NAV -->
+<div class="nav">
+  <div class="nav-tab active" onclick="goto('quadro')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/></svg>
+    Quadro de Pessoal
+  </div>
+  <div class="nav-tab" onclick="goto('organograma')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="6" height="4" rx="1"/><rect x="15" y="3" width="6" height="4" rx="1"/><rect x="9" y="17" width="6" height="4" rx="1"/><line x1="12" y1="7" x2="12" y2="17"/><line x1="6" y1="5" x2="12" y2="12"/><line x1="18" y1="5" x2="12" y2="12"/></svg>
+    Organograma
+  </div>
+  <div class="nav-tab" onclick="goto('setores')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg>
+    Setores
+  </div>
+  <div class="nav-tab" onclick="goto('horarios')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    Horários
+  </div>
+  <div class="nav-tab" onclick="goto('programacoes')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    Programações
+  </div>
+  <div class="nav-tab" onclick="goto('ocorrencias')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>
+    Ocorrências
+  </div>
+  <div class="nav-tab" onclick="goto('kanban')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="5" height="18" rx="1"/><rect x="10" y="3" width="5" height="18" rx="1"/><rect x="17" y="3" width="5" height="18" rx="1"/></svg>
+    Quadro Visual
+  </div>
+  <div class="nav-tab" onclick="goto('importar')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    Importar Planilha
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- ===== QUADRO DE PESSOAL ===== -->
+  <div class="page active" id="page-quadro">
+    <div class="kpi-grid" id="kpi-quadro"></div>
+    <div class="section-title">Colaboradores</div>
+    <div class="toolbar">
+      <input class="search" type="text" placeholder="Buscar colaborador..." id="search-quadro" oninput="filterQuadro()">
+      <select class="filter" id="filter-setor" onchange="filterQuadro()">
+        <option value="">Todos os setores</option>
+      </select>
+      <select class="filter" id="filter-status" onchange="filterQuadro()">
+        <option value="">Todos os status</option>
+        <option value="ATUAL">Ativos</option>
+        <option value="DESLIGADO">Desligados</option>
+      </select>
+      <button class="btn btn-primary" onclick="openNovoColab()">+ Novo</button>
+      <button class="btn btn-ghost" onclick="exportCSV()">⬇ CSV</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th></th>
+            <th>Nome</th>
+            <th>Cargo</th><th>Função (CLT)</th>
+            <th>Setor</th>
+            <th>Nível</th>
+            <th>Salário</th>
+            <th>Status</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-quadro"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ===== ORGANOGRAMA ===== -->
+  <div class="page" id="page-organograma" style="padding:0;position:relative">
+    <!-- TOOLBAR -->
+    <div id="org-toolbar" style="display:flex;align-items:center;gap:8px;padding:10px 20px;border-bottom:1px solid var(--border);background:var(--bg2);flex-wrap:wrap">
+      <span style="font-size:13px;font-weight:700;color:var(--text)">Organograma</span>
+      <div style="width:1px;height:20px;background:var(--border);margin:0 4px"></div>
+      <button class="btn btn-ghost" onclick="orgAdd()" style="font-size:12px">+ Pessoa</button>
+      <button class="btn btn-ghost" onclick="orgFitAll()" style="font-size:12px">⛶ Encaixar</button>
+      <button class="btn btn-ghost" onclick="orgReset()" style="font-size:12px;color:var(--text2)">↺ Refazer padrão</button>
+      <button class="btn btn-ghost" id="org-salbtn" onclick="orgToggleSal()" style="font-size:12px">👁 Mostrar salários</button>
+      <div style="flex:1"></div>
+      <span id="org-status" style="font-size:11px;color:var(--text3)">Soltar EM CIMA de um card = vira subordinado · Soltar no espaço vazio de outra FAIXA = muda o nível · 2 dedos move · pinça = zoom</span>
+      <button class="btn btn-amber" onclick="orgPrint()" style="font-size:12px">🖨 PDF</button>
+    </div>
+
+    <!-- CANVAS -->
+    <div id="org-wrap" style="position:relative;overflow:hidden;background:var(--bg);width:100%;height:calc(100vh - 156px)"
+         onmousedown="orgWrapDown(event)" onmousemove="orgWrapMove(event)"
+         onmouseup="orgWrapUp(event)" onwheel="orgWrapWheel(event)">
+      <div id="org-stage" style="position:absolute;transform-origin:0 0;top:0;left:0">
+        <div id="org-bands"></div>
+        <svg id="org-svg" style="position:absolute;top:0;left:0;pointer-events:none;overflow:visible;width:4000px;height:4000px"></svg>
+      </div>
+    </div>
+
+    <!-- ZOOM -->
+    <div id="org-zoom" style="position:absolute;bottom:16px;left:20px;display:flex;gap:4px;z-index:20">
+      <button class="btn btn-ghost" style="padding:4px 10px;font-size:14px" onclick="orgZoom(-0.12)">−</button>
+      <span id="org-zlbl" style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:12px;color:var(--text2);min-width:52px;text-align:center">100%</span>
+      <button class="btn btn-ghost" style="padding:4px 10px;font-size:14px" onclick="orgZoom(0.12)">+</button>
+    </div>
+
+    <!-- MODAL EDITAR NÓ -->
+    <div id="org-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:300;align-items:center;justify-content:center">
+      <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:14px;width:480px;max-height:85vh;overflow-y:auto">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 22px 14px;border-bottom:1px solid var(--border)">
+          <div style="font-size:15px;font-weight:700">Editar pessoa</div>
+          <button onclick="orgCloseModal()" style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;width:28px;height:28px;color:var(--text);cursor:pointer;font-size:16px">✕</button>
+        </div>
+        <div style="padding:20px 22px;display:flex;flex-direction:column;gap:12px">
+          <input type="hidden" id="org-eid">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div class="form-group"><label class="form-label">Nome</label><input class="form-input" id="org-enome" style="text-transform:uppercase"></div>
+            <div class="form-group"><label class="form-label">Cargo</label><input class="form-input" id="org-ecargo" style="text-transform:uppercase" placeholder="Ex: CONFERENTE"></div>
+          </div>
+          <div class="form-group"><label class="form-label">Função detalhada (CLT)</label><input class="form-input" id="org-efuncao" placeholder="Ex: Conferente Jr"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div class="form-group">
+              <label class="form-label">Setor</label>
+              <select class="form-input" id="org-esetor"></select>
+            </div>
+            <div class="form-group"><label class="form-label">Salário (R$)</label><input class="form-input" id="org-esal" type="number" step="0.01"></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nível (faixa do organograma)</label>
+            <select class="form-input" id="org-enivel"></select>
+          </div>
+          <div>
+            <div class="form-label" style="margin-bottom:6px">Subordinados</div>
+            <div id="org-esubs" style="display:flex;flex-direction:column;gap:4px;max-height:110px;overflow-y:auto"></div>
+            <div style="font-size:11px;color:var(--text3);margin-top:5px">Arraste um card para cima deste para torná-lo subordinado</div>
+          </div>
+        </div>
+        <div style="padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:8px">
+          <button onclick="orgDeleteCurrent()" style="background:none;border:1px solid #f8717144;border-radius:6px;padding:6px 12px;color:#f87171;cursor:pointer;font-size:12px">🗑 Excluir</button>
+          <div style="flex:1"></div>
+          <button onclick="orgCloseModal()" class="btn btn-ghost" style="font-size:12px">Cancelar</button>
+          <button onclick="orgSaveCurrent()" class="btn btn-primary" style="font-size:12px">💾 Salvar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SETORES =====  <!-- ===== SETORES ===== -->
+  <div class="page" id="page-setores">
+    <div class="kpi-grid" id="kpi-setores"></div>
+    <div class="section-title">Distribuição por Setor</div>
+    <div class="setor-grid" id="setor-grid"></div>
+  </div>
+
+  <!-- ===== HORÁRIOS ===== -->
+  <div class="page" id="page-horarios">
+    <div class="section-title">Programação de Horários</div>
+    <div class="toolbar">
+      <select class="filter" id="filter-area-hor">
+        <option value="">Todas as áreas</option>
+      </select>
+      <span style="font-size:12px;color:var(--text3);">
+        <span style="display:inline-block;width:12px;height:12px;background:var(--red);border-radius:2px;vertical-align:middle;margin-right:4px"></span>Trabalhando
+        <span style="display:inline-block;width:12px;height:12px;background:var(--bg3);border:1px solid var(--border);border-radius:2px;vertical-align:middle;margin:0 4px 0 12px"></span>Folga
+      </span>
+    </div>
+    <div class="table-wrap">
+      <table id="table-horarios" style="min-width:900px">
+        <thead>
+          <tr>
+            <th style="min-width:50px">Área</th>
+            <th style="min-width:80px">Setor</th>
+            <th style="min-width:140px">Nome</th>
+            <th style="min-width:100px">Função</th>
+            <th style="min-width:80px">Salário</th>
+            <th colspan="24" style="text-align:center">Horário (7h → 6h)</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-horarios"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ===== PROGRAMAÇÕES ===== -->
+  <div class="page" id="page-programacoes">
+    <div class="kpi-grid" id="kpi-prog"></div>
+
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:10px;flex-wrap:wrap">
+      <div class="page-tabs" style="flex:1">
+        <div class="page-tab active" onclick="subgoto('prog-lista','prog-cal')">📋 Lista</div>
+        <div class="page-tab" onclick="subgoto('prog-cal','prog-lista')">📅 Calendário</div>
+      </div>
+      <button class="btn btn-primary" onclick="openModal('modal-add-prog')" style="margin-bottom:26px">+ Nova Programação</button>
+    </div>
+
+    <div class="sub-page active" id="prog-lista">
+      <div class="toolbar">
+        <select class="filter" id="filter-tipo-prog" onchange="filterProg()">
+          <option value="">Todos os tipos</option>
+          <option value="ferias">🌴 Férias</option>
+          <option value="demissao">❌ Demissão</option>
+          <option value="promocao">⭐ Promoção</option>
+          <option value="movimentacao">🔄 Movimentação</option>
+        </select>
+      </div>
+      <div class="prog-list" id="prog-list"></div>
+      <div class="empty" id="prog-empty" style="display:none">
+        <div style="font-size:32px;margin-bottom:10px">📅</div>
+        Nenhuma programação cadastrada.<br>Clique em "+ Nova Programação" para adicionar.
+      </div>
+    </div>
+
+    <div class="sub-page" id="prog-cal">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <button class="btn btn-ghost" onclick="changeMonth(-1)">‹ Anterior</button>
+        <div id="cal-month-label" style="font-size:15px;font-weight:700"></div>
+        <button class="btn btn-ghost" onclick="changeMonth(1)">Próximo ›</button>
+      </div>
+      <div class="calendar-grid" id="calendar-grid"></div>
+    </div>
+  </div>
+
+  <!-- ===== OCORRÊNCIAS ===== -->
+  <div class="page" id="page-ocorrencias">
+    <div class="oc-filtros">
+      <select class="filter" id="oc-f-ano" onchange="renderOcorrencias()"></select>
+      <select class="filter" id="oc-f-colab" onchange="renderOcorrencias()"></select>
+      <select class="filter" id="oc-f-tipo" onchange="renderOcorrencias()"></select>
+      <div style="flex:1"></div>
+      <button class="btn btn-ghost" onclick="ocCSV()">⬇ CSV</button>
+      <button class="btn btn-primary" onclick="ocAbrir()">+ Registrar ocorrência</button>
+    </div>
+    <div class="oc-kpis" id="oc-kpis"></div>
+    <div class="oc-grid">
+      <div class="oc-card">
+        <div class="oc-card-t">Ocorrências por mês</div>
+        <div class="oc-card-s" id="oc-mes-sub"></div>
+        <div class="oc-leg" id="oc-leg"></div>
+        <div id="oc-chart-mes"></div>
+      </div>
+      <div class="oc-card">
+        <div class="oc-card-t">Total por tipo</div>
+        <div class="oc-card-s" id="oc-tipo-sub"></div>
+        <div id="oc-chart-tipo"></div>
+      </div>
+    </div>
+    <div class="oc-card" style="margin-bottom:18px">
+      <div class="oc-card-t">Por colaborador</div>
+      <div class="oc-card-s">Quantidade de cada tipo no período filtrado</div>
+      <div style="overflow-x:auto"><table class="oc-tab" id="oc-rank"></table></div>
+    </div>
+    <div class="oc-card">
+      <div class="oc-card-t">Registros</div>
+      <div class="oc-card-s" id="oc-reg-sub"></div>
+      <div style="overflow-x:auto"><table class="oc-tab" id="oc-lista"></table></div>
+    </div>
+    <div id="oc-tip"></div>
+  </div>
+
+  <!-- ===== IMPORTAR ===== -->
+  <!-- ===== QUADRO VISUAL DRAG & DROP ===== -->
+  <div class="page" id="page-kanban">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <div id="kb-nao-alocado-badge" style="background:#1a0000;border:1px solid #CC000055;border-radius:7px;padding:4px 12px;font-size:12px;color:#f87171">
+          ⚠ <span id="kb-nao-alocado-count">0</span> não alocados
+        </div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost" onclick="resetQuadroVisual()">↺ Resetar</button>
+        <button class="btn btn-amber" onclick="exportQuadroXLSX()">⬇ Excel</button>
+        <button class="btn btn-ghost" onclick="printQuadro()">🖨 PDF</button>
+      </div>
+    </div>
+    <div id="quadro-visual-wrap" style="overflow-x:auto"></div>
+  </div>
+
+  <div class="page" id="page-importar">
+    <div class="section-title">Importar Planilha Excel</div>
+    <div class="import-zone" id="import-zone" onclick="document.getElementById('file-input').click()"
+      ondragover="event.preventDefault();this.classList.add('drag')"
+      ondragleave="this.classList.remove('drag')"
+      ondrop="handleDrop(event)">
+      <div class="import-icon">📊</div>
+      <div class="import-title">Arraste o arquivo XLSX ou clique para selecionar</div>
+      <div class="import-sub">Planilha ORGANOGRAMA.xlsx da Ziran ou backup completo (.json)</div>
+    </div>
+    <input type="file" id="file-input" accept=".xlsx,.xls,.json" style="display:none" onchange="handleFile(event)">
+
+    <div class="bk-box">
+      <div>
+        <div class="bk-t">💾 Backup completo</div>
+        <div class="bk-s">Quadro, organograma, níveis, horários, programações e ocorrências em um arquivo .json</div>
+      </div>
+      <div class="bk-btns">
+        <button class="btn btn-amber" onclick="backupBaixar()">⬇ Exportar backup</button>
+        <button class="btn btn-primary" onclick="document.getElementById('backup-file').click()">⬆ Importar backup</button>
+      </div>
+      <input type="file" id="backup-file" accept=".json,application/json" style="display:none" onchange="backupRestaurar(event)">
+    </div>
+
+    <div class="section-title">Dados ativos no sistema</div>
+    <div class="kpi-grid">
+      <div class="kpi blue"><div class="kpi-label">Colaboradores</div><div class="kpi-value" id="info-total">0</div></div>
+      <div class="kpi green"><div class="kpi-label">Ativos</div><div class="kpi-value" id="info-ativos">0</div></div>
+      <div class="kpi red"><div class="kpi-label">Desligados</div><div class="kpi-value" id="info-desl">0</div></div>
+      <div class="kpi amber"><div class="kpi-label">Setores</div><div class="kpi-value" id="info-setores">0</div></div>
+    </div>
+    <div style="margin-top:20px;display:flex;gap:10px">
+            <button class="btn btn-ghost" onclick="clearData()" style="color:#f87171">🗑 Limpar dados</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ===== MODAIS ===== -->
+<!-- Modal Ocorrência -->
+<div class="overlay" id="modal-oc">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header">
+      <div class="modal-title" id="oc-m-titulo">Registrar ocorrência</div>
+      <button class="modal-close" onclick="closeModal('modal-oc')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="oc-id">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Colaborador <span style="color:var(--red)">*</span></label>
+          <select class="form-input" id="oc-colab" onchange="ocColabChange()"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tipo <span style="color:var(--red)">*</span></label>
+          <select class="form-input" id="oc-tipo" onchange="ocTipoChange()"></select>
+        </div>
+      </div>
+      <div class="form-row full" id="oc-sub-wrap">
+        <div class="form-group">
+          <label class="form-label" id="oc-sub-lbl">Motivo</label>
+          <select class="form-input" id="oc-sub"></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" id="oc-ini-lbl">Data</label>
+          <input class="form-input" id="oc-ini" type="date" onchange="ocCalcDias()">
+        </div>
+        <div class="form-group" id="oc-fim-wrap">
+          <label class="form-label">Até</label>
+          <input class="form-input" id="oc-fim" type="date" onchange="ocCalcDias()">
+        </div>
+      </div>
+      <div id="oc-dias" style="font-size:12px;color:var(--amber);margin:-4px 0 10px"></div>
+      <div id="oc-aum-wrap">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Salário atual (R$)</label>
+            <input class="form-input" id="oc-sal-ant" type="number" step="0.01" oninput="ocCalcPct()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Novo salário (R$) <span style="color:var(--red)">*</span></label>
+            <input class="form-input" id="oc-sal-novo" type="number" step="0.01" oninput="ocCalcPct()">
+          </div>
+        </div>
+        <div id="oc-pct" style="font-size:12px;color:var(--green);margin:-4px 0 8px"></div>
+        <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);margin-bottom:10px;cursor:pointer">
+          <input type="checkbox" id="oc-aplicar" checked> Atualizar o salário no cadastro do colaborador
+        </label>
+      </div>
+      <div class="form-row full">
+        <div class="form-group">
+          <label class="form-label">Observação</label>
+          <input class="form-input" id="oc-obs" placeholder="Detalhes, nº do documento, quem aplicou...">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-oc')">Cancelar</button>
+      <button class="btn btn-primary" onclick="ocSalvar()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Modal Edição / Novo Colaborador -->
+<div class="overlay" id="modal-add-colab">
+  <div class="modal" style="max-width:620px">
+    <div class="modal-header">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div id="modal-av" style="width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700"></div>
+        <div>
+          <div class="modal-title" id="modal-colab-title">Novo Colaborador</div>
+          <div id="modal-colab-sub" style="font-size:11px;color:var(--text3)"></div>
+        </div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modal-add-colab')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-idx">
+
+      <!-- Nome -->
+      <div class="form-row full" style="margin-bottom:12px">
+        <div class="form-group">
+          <label class="form-label">Nome completo</label>
+          <input class="form-input" id="f-nome" placeholder="Nome completo..." style="text-transform:uppercase" oninput="updateModalAvatar()">
+        </div>
+      </div>
+
+      <!-- Setor + Cargo (função normalizada) -->
+      <div class="form-row" style="margin-bottom:6px">
+        <div class="form-group">
+          <label class="form-label">Setor <span style="color:var(--red)">*</span></label>
+          <select class="form-input" id="f-setor" onchange="checkNovoSetor()" style="width:100%">
+            <option value="">— Selecione —</option>
+          </select>
+          <div id="novo-setor-wrap" style="display:none;margin-top:6px">
+            <input class="form-input" id="f-setor-novo" placeholder="Nome do novo setor..." style="text-transform:uppercase">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Cargo (função) <span style="color:var(--red)">*</span>
+            <span style="font-weight:400;color:var(--text3)"> — ex: CONFERENTE, OPERADOR</span>
+          </label>
+          <select class="form-input" id="f-cargo" onchange="checkNovoCargo()" style="width:100%">
+            <option value="">— Selecione —</option>
+          </select>
+          <div id="novo-cargo-wrap" style="display:none;margin-top:6px">
+            <input class="form-input" id="f-cargo-novo" placeholder="Ex: CONFERENTE" style="text-transform:uppercase">
+          </div>
+        </div>
+      </div>
+
+      <!-- Função detalhada (cargo CLT / descrição) -->
+      <div class="form-row full" style="margin-bottom:6px">
+        <div class="form-group">
+          <label class="form-label">Função detalhada
+            <span style="font-weight:400;color:var(--text3)"> — conforme CLT / crachá, ex: CONFERENTE JR, OPER.EMPILH.II</span>
+          </label>
+          <input class="form-input" id="f-funcao" placeholder="Ex: CONFERENTE JR" style="text-transform:uppercase">
+        </div>
+      </div>
+
+      <!-- Nível hierárquico (faixa do organograma) -->
+      <div class="form-row full" style="margin-bottom:6px">
+        <div class="form-group">
+          <label class="form-label">Nível no organograma <span style="color:var(--red)">*</span>
+            <span style="font-weight:400;color:var(--text3)"> — define a faixa em que o card aparece</span>
+          </label>
+          <select class="form-input" id="f-nivel" style="width:100%"></select>
+        </div>
+      </div>
+
+      <!-- Aviso mudança setor -->
+      <div id="aviso-setor" style="display:none;background:#1a1200;border:1px solid #F59E0B44;border-radius:7px;padding:8px 12px;font-size:12px;color:var(--amber);margin-bottom:8px">
+        🔄 Setor: <span id="setor-de"></span> → <span id="setor-para"></span>
+      </div>
+
+      <!-- Salário com comparativo -->
+      <div class="form-row" style="margin-bottom:6px">
+        <div class="form-group">
+          <label class="form-label">Salário (R$)</label>
+          <input class="form-input" id="f-salario" type="number" step="0.01" placeholder="0,00" oninput="calcDiffSal()">
+          <div id="sal-anterior" style="font-size:11px;color:var(--text3);margin-top:4px"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Variação</label>
+          <div id="sal-diff" style="background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:8px 12px;font-size:14px;font-weight:700;min-height:36px;display:flex;align-items:center">—</div>
+        </div>
+      </div>
+
+      <!-- Status e Admissão -->
+      <div class="form-row" style="margin-bottom:10px">
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select class="form-input" id="f-status">
+            <option value="ATUAL">✅ Ativo</option>
+            <option value="DESLIGADO">❌ Desligado</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Admissão</label>
+          <input class="form-input" id="f-admissao" type="date">
+        </div>
+      </div>
+
+      <!-- Observações -->
+      <div class="form-row full" style="margin-bottom:0">
+        <div class="form-group">
+          <label class="form-label">Observações</label>
+          <input class="form-input" id="f-obs" placeholder="Observações internas...">
+        </div>
+      </div>
+
+      <!-- Histórico -->
+      <div id="historico-wrap" style="display:none;margin-top:16px">
+        <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Histórico</div>
+        <div id="historico-list" style="display:flex;flex-direction:column;gap:5px;max-height:110px;overflow-y:auto"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add-colab')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveColab()">💾 Salvar alterações</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Programação -->
+<div class="overlay" id="modal-add-prog">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Nova Programação</div>
+      <button class="modal-close" onclick="closeModal('modal-add-prog')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Tipo</label>
+          <select class="form-input" id="p-tipo" onchange="updateProgFields()">
+            <option value="ferias">🌴 Férias</option>
+            <option value="demissao">❌ Demissão</option>
+            <option value="promocao">⭐ Promoção / Reajuste</option>
+            <option value="movimentacao">🔄 Movimentação de Setor</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Colaborador</label>
+          <select class="form-input" id="p-colab"></select>
+        </div>
+      </div>
+      <div class="form-row" id="p-dates">
+        <div class="form-group">
+          <label class="form-label">Data início</label>
+          <input class="form-input" id="p-inicio" type="date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Data fim</label>
+          <input class="form-input" id="p-fim" type="date">
+        </div>
+      </div>
+      <div class="form-row full" id="p-extra-field">
+        <div class="form-group">
+          <label class="form-label" id="p-extra-label">Observação</label>
+          <input class="form-input" id="p-extra" placeholder="">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add-prog')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveProg()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// =====================================
+// DADOS BASE (planilha importada)
+// =====================================
+const QUADRO_BASE = [];   // versão online: dados ficam só no Firestore (nada embutido no código)
+
+const HORARIOS_BASE = [];
+
+// =====================================
+// STATE (com persistência no navegador)
+// =====================================
+let quadro = [...QUADRO_BASE];
+let horarios = [...HORARIOS_BASE];
+let programacoes = [];
+let ocorrencias = [];
+
+function persistAll(){
+  try{
+    localStorage.setItem('ziran-dados', JSON.stringify({quadro, horarios, programacoes, ocorrencias, v:1}));
+  }catch(e){}
+}
+function loadPersisted(){
+  // versão online: a nuvem é a única fonte — limpa qualquer cópia antiga do navegador
+  try{ ['ziran-dados','ziran-org5','ziran-setor-cores'].forEach(k=>localStorage.removeItem(k)); }catch(e){}
+  return false;
+  try{
+    const d = JSON.parse(localStorage.getItem('ziran-dados'));
+    if(d && d.quadro && d.quadro.length){
+      quadro = d.quadro;
+      if(d.horarios && d.horarios.length) horarios = d.horarios;
+      if(d.programacoes) programacoes = d.programacoes;
+      if(d.ocorrencias) ocorrencias = d.ocorrencias;
+      return true;
+    }
+  }catch(e){}
+  return false;
+}
+let calMonth = new Date();
+calMonth.setDate(1);
+
+// =====================================
+// NAVIGATION
+// =====================================
+function goto(pg) {
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  event.target.closest('.nav-tab').classList.add('active');
+  document.getElementById('page-' + pg).classList.add('active');
+  if(pg==='quadro') renderQuadro();
+  if(pg==='organograma'){ renderOrg(); setTimeout(orgFitAll,60); }
+  if(pg==='setores') renderSetores();
+  if(pg==='horarios') renderHorarios();
+  if(pg==='programacoes') renderProgramacoes();
+  if(pg==='ocorrencias') renderOcorrencias();
+  if(pg==='kanban') renderKanban();
+  if(pg==='importar') renderImportInfo();
+}
+
+function subgoto(show, hide) {
+  document.querySelectorAll('.page-tab').forEach((t,i) => {
+    t.classList.toggle('active', t.getAttribute('onclick').includes("subgoto('"+show+"'"));
+  });
+  document.getElementById(show).classList.add('active');
+  document.getElementById(hide).classList.remove('active');
+  if(show==='prog-cal') renderCalendar();
+}
+
+// =====================================
+// QUADRO DE PESSOAL
+// =====================================
+const AVATAR_COLORS = ['#CC0000','#F59E0B','#3B82F6','#22C55E','#A855F7','#F97316','#14B8A6','#EC4899'];
+function avatarColor(nome) { let h=0; for(let c of nome) h=(h+c.charCodeAt(0))%AVATAR_COLORS.length; return AVATAR_COLORS[h]; }
+function initials(nome) { const parts=nome.trim().split(' '); return (parts[0][0]+(parts[1]?parts[1][0]:'')).toUpperCase(); }
+
+function renderQuadro() {
+  const ativos = quadro.filter(q=>q.status==='ATUAL');
+  const desl = quadro.filter(q=>q.status==='DESLIGADO');
+  const massaAtivos = ativos.reduce((s,q)=>s+q.salario,0);
+  const setores = [...new Set(ativos.map(q=>q.setor))].length;
+
+  document.getElementById('kpi-quadro').innerHTML = `
+    <div class="kpi green"><div class="kpi-label">Ativos</div><div class="kpi-value">${ativos.length}</div><div class="kpi-sub">colaboradores</div></div>
+    <div class="kpi red"><div class="kpi-label">Desligados</div><div class="kpi-value">${desl.length}</div><div class="kpi-sub">no histórico</div></div>
+    <div class="kpi amber"><div class="kpi-label">Massa Salarial</div><div class="kpi-value">R$${(massaAtivos/1000).toFixed(1)}k</div><div class="kpi-sub">ativos/mês</div></div>
+    <div class="kpi blue"><div class="kpi-label">Setores</div><div class="kpi-value">${setores}</div><div class="kpi-sub">áreas ativas</div></div>
+  `;
+
+  // Populate filter setores
+  const sel = document.getElementById('filter-setor');
+  const allSetores = [...new Set(quadro.map(q=>q.setor))].sort();
+  sel.innerHTML = '<option value="">Todos os setores</option>' + allSetores.map(s=>`<option value="${s}">${s}</option>`).join('');
+
+  filterQuadro();
+}
+
+function filterQuadro() {
+  const search = document.getElementById('search-quadro').value.toLowerCase();
+  const setor = document.getElementById('filter-setor').value;
+  const status = document.getElementById('filter-status').value;
+
+  const filtered = quadro.filter((q,i) => {
+    q._idx = i;
+    return (!search || q.nome.toLowerCase().includes(search) || q.funcao.toLowerCase().includes(search))
+      && (!setor || q.setor === setor)
+      && (!status || q.status === status);
+  });
+
+  const tbody = document.getElementById('tbody-quadro');
+  tbody.innerHTML = filtered.map((q,i) => {
+    const av = avatarColor(q.nome);
+    const ini = initials(q.nome);
+    const isDesl = q.status === 'DESLIGADO';
+    return `
+    <tr class="${isDesl?'desligado':''}">
+      <td><div class="avatar" style="background:${av}22;color:${av};border:1px solid ${av}44">${ini}</div></td>
+      <td><div style="font-weight:500">${q.nome}</div>${q.obs?`<div style="font-size:11px;color:var(--text3)">${q.obs}</div>`:''}</td>
+      <td><span class="badge badge-gray">${q.cargo||q.funcao}</span></td><td style="font-size:12px;color:var(--text2)">${q.funcao}</td>
+      <td><span class="badge" style="background:${getSetorCor(q.setor)}22;color:${getSetorCor(q.setor)};border:1px solid ${getSetorCor(q.setor)}55">${q.setor}</span></td>
+      <td><span class="nivel-badge">${nivelLabel(q.nivel||nivelSugerido(q))}</span></td>
+      <td style="font-family:monospace;color:var(--green)">R$ ${q.salario.toFixed(2).replace('.',',')}</td>
+      <td>${isDesl
+        ? '<span class="badge badge-red">Desligado</span>'
+        : '<span class="badge badge-green">Ativo</span>'
+      }</td>
+      <td>
+        <button class="btn btn-ghost" style="padding:4px 10px;font-size:12px" onclick="editColab(${q._idx})">✎</button>
+        <button class="btn btn-ghost" style="padding:4px 10px;font-size:12px;color:#f87171" onclick="deleteColab(${q._idx})">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
+  if(!filtered.length) tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text3);padding:30px">Nenhum resultado</td></tr>';
+}
+
+function populateSetorDropdown(selectedSetor) {
+  const setores = [...new Set(quadro.map(q=>q.setor))].sort();
+  const sel = document.getElementById('f-setor');
+  sel.innerHTML = '<option value="">— Selecione o setor —</option>'
+    + setores.map(s=>`<option value="${s}" ${s===selectedSetor?'selected':''}>${s}</option>`).join('')
+    + '<option value="__NOVO__">+ Criar novo setor...</option>';
+}
+
+function populateCargoDropdown(selected) {
+  const cargos = [...new Set(quadro.map(q=>q.cargo||q.funcao).filter(Boolean))].sort();
+  const sel = document.getElementById('f-cargo');
+  sel.innerHTML = '<option value="">— Selecione —</option>'
+    + cargos.map(c=>`<option value="${c}" ${c===selected?'selected':''}>${c}</option>`).join('')
+    + '<option value="__NOVO__">+ Novo cargo...</option>';
+}
+function checkNovoCargo() {
+  const val = document.getElementById('f-cargo').value;
+  document.getElementById('novo-cargo-wrap').style.display = val==='__NOVO__'?'block':'none';
+}
+function getCargoValue() {
+  const sel = document.getElementById('f-cargo').value;
+  if(sel==='__NOVO__') return document.getElementById('f-cargo-novo').value.trim().toUpperCase();
+  return sel;
+}
+
+function checkNovoSetor() {
+  const val = document.getElementById('f-setor').value;
+  document.getElementById('novo-setor-wrap').style.display = val === '__NOVO__' ? 'block' : 'none';
+  updateAvisoSetor();
+}
+
+function updateAvisoSetor() {
+  const idx = document.getElementById('edit-idx').value;
+  if(idx === '') return;
+  const original = quadro[parseInt(idx)];
+  const novoSetor = getSetorValue();
+  const aviso = document.getElementById('aviso-setor');
+  if(novoSetor && novoSetor !== original.setor) {
+    document.getElementById('setor-de').textContent = original.setor;
+    document.getElementById('setor-para').textContent = novoSetor;
+    aviso.style.display = 'block';
+  } else { aviso.style.display = 'none'; }
+}
+
+function getSetorValue() {
+  const sel = document.getElementById('f-setor').value;
+  if(sel === '__NOVO__') return document.getElementById('f-setor-novo').value.trim().toUpperCase();
+  return sel;
+}
+
+function updateModalAvatar() {
+  const nome = document.getElementById('f-nome').value.trim() || '?';
+  const av = avatarColor(nome);
+  const ini = initials(nome);
+  const el = document.getElementById('modal-av');
+  el.textContent = ini;
+  el.style.background = av + '22';
+  el.style.color = av;
+  el.style.border = `1px solid ${av}44`;
+}
+
+function calcDiffSal() {
+  const idx = document.getElementById('edit-idx').value;
+  if(idx === '') { document.getElementById('sal-diff').textContent = '—'; return; }
+  const original = quadro[parseInt(idx)].salario;
+  const novo = parseFloat(document.getElementById('f-salario').value) || 0;
+  const diff = novo - original;
+  const el = document.getElementById('sal-diff');
+  if(diff === 0) { el.textContent = '= Sem alteração'; el.style.color = 'var(--text3)'; }
+  else if(diff > 0) { el.textContent = `▲ +R$ ${diff.toFixed(2)} (${((diff/original)*100).toFixed(1)}%)`; el.style.color = 'var(--green)'; }
+  else { el.textContent = `▼ R$ ${diff.toFixed(2)} (${((diff/original)*100).toFixed(1)}%)`; el.style.color = '#f87171'; }
+}
+
+function editColab(idx) {
+  const q = quadro[idx];
+  document.getElementById('modal-colab-title').textContent = 'Editar Colaborador';
+  document.getElementById('modal-colab-sub').textContent = (q.cargo||q.funcao) + ' · ' + q.setor;
+  document.getElementById('edit-idx').value = idx;
+  document.getElementById('f-nome').value = q.nome;
+  document.getElementById('f-funcao').value = q.funcao;
+  document.getElementById('f-salario').value = q.salario;
+  populateCargoDropdown(q.cargo||'');
+  document.getElementById('novo-cargo-wrap').style.display='none';
+  document.getElementById('f-status').value = q.status;
+  document.getElementById('f-admissao').value = q.admissao || '';
+  document.getElementById('f-obs').value = q.obs || '';
+  document.getElementById('aviso-setor').style.display = 'none';
+  document.getElementById('novo-setor-wrap').style.display = 'none';
+  document.getElementById('sal-diff').textContent = '= Sem alteração';
+  document.getElementById('sal-diff').style.color = 'var(--text3)';
+  document.getElementById('sal-anterior').textContent = `Anterior: R$ ${q.salario.toFixed(2)}`;
+  populateSetorDropdown(q.setor);
+  populateNivelDropdown(q.nivel||nivelSugerido(q));
+  updateModalAvatar();
+  const hist = q.historico || [];
+  const hwrap = document.getElementById('historico-wrap');
+  const hlist = document.getElementById('historico-list');
+  if(hist.length) {
+    hwrap.style.display = 'block';
+    hlist.innerHTML = hist.slice().reverse().map(h => `
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:6px 10px;display:flex;justify-content:space-between;align-items:center">
+        <div style="font-size:12px">${h.desc}</div>
+        <div style="font-size:11px;color:var(--text3)">${h.data}</div>
+      </div>
+    `).join('');
+  } else { hwrap.style.display = 'none'; }
+  document.getElementById('modal-add-colab').classList.add('open');
+}
+
+function deleteColab(idx) {
+  if(confirm(`Remover "${quadro[idx].nome}"?`)) {
+    quadro.splice(idx,1);
+    persistAll();
+    renderQuadro();
+    toast('Colaborador removido.','success');
+  }
+}
+
+function saveColab() {
+  const nome = document.getElementById('f-nome').value.trim();
+  if(!nome) { toast('Nome obrigatório.','error'); return; }
+  const setor = getSetorValue();
+  if(!setor) { toast('Selecione ou crie um setor.','error'); return; }
+  const novoSalario = parseFloat(document.getElementById('f-salario').value)||0;
+  const novaFuncao = document.getElementById('f-funcao').value.trim().toUpperCase();
+  const novoCargo  = getCargoValue() || novaFuncao;
+  const novoNivel = document.getElementById('f-nivel').value || 'EXECUCAO';
+  const idx = document.getElementById('edit-idx').value;
+  const hoje = new Date().toLocaleDateString('pt-BR');
+  const historico = [];
+  if(idx !== '') {
+    const original = quadro[parseInt(idx)];
+    const hist = original.historico || [];
+    if(novoSalario !== original.salario) hist.push({desc:`Salário: R$${original.salario.toFixed(2)} → R$${novoSalario.toFixed(2)}`, data: hoje});
+    if(novaFuncao !== original.funcao) hist.push({desc:`Função: ${original.funcao} → ${novaFuncao}`, data: hoje});
+    if(novoCargo !== (original.cargo||original.funcao)) hist.push({desc:`Cargo: ${original.cargo||original.funcao} → ${novoCargo}`, data: hoje});
+    if(setor !== original.setor) hist.push({desc:`Setor: ${original.setor} → ${setor}`, data: hoje});
+    const nivAnt = original.nivel||nivelSugerido(original);
+    if(novoNivel !== nivAnt) hist.push({desc:`Nível: ${nivelLabel(nivAnt)} → ${nivelLabel(novoNivel)}`, data: hoje});
+    historico.push(...hist);
+  }
+  const obj = {
+    uid: idx !== '' ? (quadro[parseInt(idx)].uid || novoUid()) : novoUid(),
+    nome: nome.toUpperCase(),
+    funcao: novaFuncao,
+    cargo: novoCargo,
+    setor: setor,
+    nivel: novoNivel,
+    salario: novoSalario,
+    status: document.getElementById('f-status').value,
+    admissao: document.getElementById('f-admissao').value,
+    obs: document.getElementById('f-obs').value.trim(),
+    historico: historico,
+  };
+  if(idx !== '') { quadro[parseInt(idx)] = obj; }
+  else { quadro.push(obj); }
+  persistAll();
+  closeModal('modal-add-colab');
+  renderQuadro();
+  toast('Salvo com sucesso!','success');
+}
+
+function exportCSV() {
+  const rows = [['Nome','Função','Setor','Nível','Salário','Status']];
+  quadro.forEach(q => rows.push([q.nome,q.funcao,q.setor,nivelLabel(q.nivel||nivelSugerido(q)),q.salario,q.status]));
+  const csv = rows.map(r => r.map(c => `"${c}"`).join(';')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,\uFEFF' + encodeURIComponent(csv);
+  a.download = 'quadro-ziran.csv';
+  a.click();
+}
+
+// =====================================
+// ORGANOGRAMA — ÁRVORE HIERÁRQUICA
+// =====================================
+// Modelo: cada nó tem 'pai' (id do superior ou null).
+// A árvore SEMPRE se auto-organiza. Arrastar um card e soltar
+// em cima de outro card = "esse é meu novo chefe".
+
+/* ── CORES FIXAS POR SETOR ── */
+const ORG_COR = {'GESTÃO':'#F59E0B','DEPOT':'#CC0000','ARMAZEM':'#3B82F6','TRANSPORTE':'#22C55E','SEGURANÇA':'#A855F7','ADM':'#F97316','MECANICA':'#06B6D4','MECÂNICA':'#06B6D4','MANUTENÇÃO':'#06B6D4','MANUTENCAO':'#06B6D4','GERAL':'#84CC16','OUTRO':'#6B7280'};
+const COR_POOL_EXTRA = ['#EC4899','#14B8A6','#EAB308','#8B5CF6','#0EA5E9','#F43F5E','#10B981','#D946EF','#65A30D','#78716C'];
+let SETOR_CORES_USER = {};
+try{ SETOR_CORES_USER = JSON.parse(localStorage.getItem('ziran-setor-cores'))||{}; }catch(e){}
+function salvarCoresSetor(){ try{localStorage.setItem('ziran-setor-cores',JSON.stringify(SETOR_CORES_USER))}catch(e){} }
+function getSetorCor(setor){
+  setor=(setor||'OUTRO').toUpperCase();
+  if(SETOR_CORES_USER[setor]) return SETOR_CORES_USER[setor];
+  if(ORG_COR[setor]) return ORG_COR[setor];
+  // setor novo: recebe uma cor fixa ainda não usada e fica salva
+  const usadas=new Set([...Object.values(ORG_COR),...Object.values(SETOR_CORES_USER)].map(c=>c.toUpperCase()));
+  const cor=COR_POOL_EXTRA.find(c=>!usadas.has(c.toUpperCase())) || COR_POOL_EXTRA[Object.keys(SETOR_CORES_USER).length%COR_POOL_EXTRA.length];
+  SETOR_CORES_USER[setor]=cor; salvarCoresSetor();
+  return cor;
+}
+function orgMudarCorSetor(setor,cor){
+  SETOR_CORES_USER[setor]=cor; salvarCoresSetor(); renderOrg();
+}
+
+/* ── NÍVEIS (FAIXAS) ── */
+const NIVEIS = [
+  {k:'ESTRATEGICO', nome:'ESTRATÉGICO',            desc:'Direção e gerência'},
+  {k:'TATICO',      nome:'TÁTICO / PLANEJAMENTO',  desc:'Supervisão e encarregados'},
+  {k:'EXECUCAO',    nome:'EXECUÇÃO',               desc:'Operação, ADM, segurança e apoio'},
+];
+function nivelLabel(k){ const n=NIVEIS.find(x=>x.k===k); return n?n.nome:'—'; }
+function nivelDeTexto(t){
+  t=(t||'').toString().toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+  if(!t) return '';
+  if(t.includes('ESTRAT')) return 'ESTRATEGICO';
+  if(t.includes('TATIC')||t.includes('PLANEJ')) return 'TATICO';
+  if(t.includes('EXEC')) return 'EXECUCAO';
+  if(t.includes('APOIO')||t.includes('SUPORTE')) return 'EXECUCAO';
+  return '';
+}
+function nivelSugerido(q){
+  const c=((q.cargo||'')+' '+(q.funcao||'')).toUpperCase();
+  const st=(q.setor||'').toUpperCase();
+  if(/DIRE|GERENT|DIRETOR|GESTOR/.test(c)) return 'ESTRATEGICO';
+  if(/SUPERV|ENCAR|ENC |COORD|LIDER|LÍDER|CHEFE/.test(c)) return 'TATICO';
+  return 'EXECUCAO';
+}
+function garantirNiveis(){
+  let mudou=false;
+  quadro.forEach(q=>{ if(!q.nivel||!NIVEIS.find(n=>n.k===q.nivel)){ q.nivel=nivelSugerido(q); mudou=true; } });
+  if(mudou) persistAll();
+}
+function populateNivelDropdown(sel){
+  const el=document.getElementById('f-nivel'); if(!el) return;
+  el.innerHTML=NIVEIS.map((n,i)=>`<option value="${n.k}" ${n.k===sel?'selected':''}>${i+1} · ${n.nome} — ${n.desc}</option>`).join('');
+}
+/* ── ID único por colaborador (permite homônimos) ── */
+function novoUid(){ return 'c'+Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+function garantirIds(){
+  let mudou=false; const vistos=new Set();
+  quadro.forEach(q=>{ if(!q.uid||vistos.has(q.uid)){ q.uid=novoUid(); mudou=true; } vistos.add(q.uid); });
+  if(mudou) persistAll();
+}
+/* Atualiza o nível no cadastro (fonte da verdade) a partir do organograma */
+function orgGravarNoCadastro(n, campos){
+  const norm=s=>(s||'').trim().toUpperCase();
+  const q=n.qid?quadro.find(a=>a.uid===n.qid):null; if(!q) return;
+  const hoje=new Date().toLocaleDateString('pt-BR');
+  q.historico=q.historico||[];
+  if(campos.nivel && campos.nivel!==q.nivel){ q.historico.push({desc:`Nível: ${nivelLabel(q.nivel)} → ${nivelLabel(campos.nivel)}`,data:hoje}); q.nivel=campos.nivel; }
+  if(campos.setor && campos.setor!==q.setor){ q.historico.push({desc:`Setor: ${q.setor} → ${campos.setor}`,data:hoje}); q.setor=campos.setor; }
+  persistAll();
+}
+
+const ORG_W=180, ORG_H=88, ORG_GX=24, ORG_GY=56;
+const BAND_PAD=36, BAND_X0=250;   // espaço das faixas / coluna de rótulos à esquerda
+let ORG_BANDS=[];                  // [{k,top,h}]
+
+let ON=[];                    // nodes: {id,nome,cargo,funcao,setor,sal,pai,x,y}
+let oSel=null;
+let oVx=40,oVy=20,oVs=1;
+let oDrag=null,oDoff={x:0,y:0},oDragMoved=false;
+let oPan=false,oPanS=null,oSpc=false;
+let oHoverTarget=null;
+let _oid=1; const oUid=()=>_oid++;
+
+/* ── Hierarquia padrão a partir do quadro ── */
+function orgDefaultNodes(){
+  ON=[]; _oid=1;
+  garantirIds();
+  const ativos=quadro.filter(q=>q.status==='ATUAL');
+
+  // Raiz: Direção (Jader)
+  const root={id:oUid(),nome:'DIREÇÃO',cargo:'DIREÇÃO',funcao:'Gerente Regional de Operações',setor:'GESTÃO',sal:0,pai:null};
+  ON.push(root);
+
+  // Supervisor
+  const lucas=ativos.find(q=>(q.cargo||'').includes('SUPERV')||(q.funcao||'').includes('SUPERV'));
+  let supId=root.id;
+  if(lucas){
+    const n={id:oUid(),nome:lucas.nome,cargo:lucas.cargo||'SUPERVISOR',funcao:lucas.funcao,setor:lucas.setor,sal:lucas.salario,pai:root.id,qid:lucas.uid};
+    ON.push(n); supId=n.id;
+  }
+
+  // Encarregados
+  const encs=ativos.filter(q=>(q.cargo||'').includes('ENCARREG'));
+  const encIds=[];
+  encs.forEach(q=>{
+    const n={id:oUid(),nome:q.nome,cargo:q.cargo,funcao:q.funcao,setor:q.setor,sal:q.salario,pai:supId,qid:q.uid};
+    ON.push(n); encIds.push(n.id);
+  });
+  const chefeOper = encIds.length ? encIds[0] : supId;
+
+  // Demais operacionais — pendurados no primeiro encarregado
+  ativos.forEach(q=>{
+    if(q===lucas) return;
+    if(encs.includes(q)) return;
+    ON.push({id:oUid(),nome:q.nome,cargo:q.cargo||q.funcao,funcao:q.funcao,setor:q.setor,sal:q.salario,pai:chefeOper,qid:q.uid});
+  });
+
+  ON.forEach(n=>{
+    if(n.pai===null){ n.nivel='ESTRATEGICO'; return; }
+    const q=ativos.find(a=>a.uid===n.qid);
+    n.nivel=(q&&q.nivel)||nivelSugerido(n);
+  });
+  orgSave();
+}
+
+function orgSave(){ try{localStorage.setItem('ziran-org5',JSON.stringify(ON))}catch(e){} }
+function orgLoad(){
+  try{
+    const d=JSON.parse(localStorage.getItem('ziran-org5'));
+    if(d&&d.length){ON=d;_oid=Math.max(...ON.map(n=>n.id))+1;return true}
+  }catch(e){}
+  return false;
+}
+
+/* ── Layout de árvore (subtree width) ── */
+function orgFilhos(id){ return ON.filter(n=>n.pai===id); }
+
+function orgTreeLayout(){
+  const roots=ON.filter(n=>n.pai===null||!ON.find(p=>p.id===n.pai));
+
+  // largura da subárvore (em px)
+  const widths={};
+  function calcW(n){
+    const kids=orgFilhos(n.id);
+    if(!kids.length){ widths[n.id]=ORG_W; return ORG_W; }
+    let w=0;
+    kids.forEach(k=>{ w+=calcW(k)+ORG_GX; });
+    w-=ORG_GX;
+    w=Math.max(w,ORG_W);
+    widths[n.id]=w;
+    return w;
+  }
+  roots.forEach(calcW);
+
+  // posicionar
+  function place(n, xLeft, depth){
+    const w=widths[n.id];
+    n.x = xLeft + w/2 - ORG_W/2;
+    const kids=orgFilhos(n.id);
+    let cx=xLeft;
+    // se filhos ocupam menos que ORG_W, centralizar sob o pai
+    const kidsW = kids.reduce((s,k)=>s+widths[k.id],0) + Math.max(0,kids.length-1)*ORG_GX;
+    if(kidsW < w) cx = xLeft + (w-kidsW)/2;
+    kids.forEach(k=>{
+      place(k, cx, depth+1);
+      cx += widths[k.id]+ORG_GX;
+    });
+  }
+  let xCursor=BAND_X0;
+  roots.forEach(r=>{
+    place(r, xCursor, 0);
+    xCursor += widths[r.id]+ORG_GX*3;
+  });
+
+  // ── Y definido pela FAIXA (nível), não pela profundidade ──
+  // dentro da faixa, quem responde a alguém da MESMA faixa desce uma sub-linha
+  const byId={}; ON.forEach(n=>byId[n.id]=n);
+  const sub={};
+  function subRow(n,guard){
+    if(sub[n.id]!==undefined) return sub[n.id];
+    const p=byId[n.pai];
+    let r=0;
+    if(p && p.nivel===n.nivel && (guard||0)<50) r=subRow(p,(guard||0)+1)+1;
+    sub[n.id]=r; return r;
+  }
+  ON.forEach(n=>subRow(n));
+  let top=0; ORG_BANDS=[];
+  NIVEIS.forEach(nv=>{
+    const membros=ON.filter(n=>n.nivel===nv.k);
+    const rows=membros.length?Math.max(...membros.map(n=>sub[n.id]))+1:1;
+    const h=BAND_PAD*2 + rows*ORG_H + (rows-1)*ORG_GY;
+    ORG_BANDS.push({k:nv.k,top,h});
+    membros.forEach(n=>{ n.y = top + BAND_PAD + sub[n.id]*(ORG_H+ORG_GY); });
+    top+=h;
+  });
+  // nível desconhecido → vai para Execução
+  ON.filter(n=>!ORG_BANDS.find(b=>b.k===n.nivel)).forEach(n=>{ n.nivel='EXECUCAO'; const b=ORG_BANDS[2]; n.y=b.top+BAND_PAD; });
+}
+function orgBandAt(y){
+  return ORG_BANDS.find(b=>y>=b.top && y<b.top+b.h) || (y<0?ORG_BANDS[0]:ORG_BANDS[ORG_BANDS.length-1]);
+}
+
+/* ── Sincronizar com o Quadro de Pessoal ── */
+function orgSync(){
+  garantirIds();
+  const norm = s => (s||'').trim().toUpperCase();
+  const porUid = {}; quadro.forEach(q=>porUid[q.uid]=q);
+  let mudou = false;
+
+  // 0) Migração: cards antigos sem vínculo → liga pelo nome a um registro ainda não vinculado
+  const usados = new Set(ON.filter(n=>n.qid&&porUid[n.qid]).map(n=>n.qid));
+  ON.forEach(n=>{
+    if(n.qid && porUid[n.qid]) return;
+    // sem vínculo ou vínculo perdido (ex.: dados recarregados) → religa pelo nome
+    const q = quadro.find(a=>!usados.has(a.uid) && a.status==='ATUAL' && norm(a.nome)===norm(n.nome));
+    if(q){ n.qid=q.uid; usados.add(q.uid); mudou=true; }
+    else if(n.qid || (n.pai!==null && n.nome && n.nome!=='NOVO' && !n._novo)){
+      // pessoa sumiu do quadro sem ter sido desligada → devolve ao quadro (não perde ninguém)
+      if(!n.qid) n.qid=novoUid();
+      const hoje=new Date().toLocaleDateString('pt-BR');
+      quadro.push({uid:n.qid,nome:n.nome,funcao:n.funcao||n.cargo,cargo:n.cargo,setor:n.setor,nivel:n.nivel,salario:+n.sal||0,
+        status:'ATUAL',admissao:'',obs:'',historico:[{desc:'Recuperado do organograma',data:hoje}]});
+      porUid[n.qid]=quadro[quadro.length-1]; usados.add(n.qid);
+      mudou=true; window._orgRecuperou=(window._orgRecuperou||0)+1;
+    }
+  });
+
+  // 1) Remover do organograma quem foi DESLIGADO ou excluído do quadro
+  //    (subordinados sobem para o chefe acima)
+  ON.slice().forEach(n=>{
+    if(!n.qid) return;                       // cards só do organograma (ex.: direção) ficam
+    const q = porUid[n.qid];
+    if(!q || q.status!=='ATUAL'){
+      ON.filter(x=>x.pai===n.id).forEach(x=>{x.pai=n.pai;});
+      ON = ON.filter(x=>x.id!==n.id);
+      mudou = true;
+    }
+  });
+
+  // 2) Adicionar quem está ATIVO no quadro e ainda não tem card
+  const comCard = new Set(ON.map(n=>n.qid).filter(Boolean));
+  const chefe = ON.find(n=>(n.cargo||'').includes('ENCARREG')) || ON.find(n=>n.pai===null);
+  quadro.forEach(q=>{
+    if(q.status!=='ATUAL' || comCard.has(q.uid)) return;
+    ON.push({id:oUid(),qid:q.uid,nome:q.nome,cargo:q.cargo||q.funcao,funcao:q.funcao,setor:q.setor,nivel:q.nivel||nivelSugerido(q),sal:q.salario,pai:chefe?chefe.id:null});
+    mudou = true;
+  });
+
+  // 3) Atualizar dados dos cards (cadastro é a fonte da verdade)
+  ON.forEach(n=>{
+    delete n._orfao;
+    const q = n.qid ? porUid[n.qid] : null;
+    if(!q) return;
+    const novoCargo = q.cargo||q.funcao;
+    const novoNivel = q.nivel||nivelSugerido(q);
+    if(n.nome!==q.nome || n.setor!==q.setor || n.cargo!==novoCargo || n.funcao!==q.funcao || n.sal!==q.salario || n.nivel!==novoNivel){
+      n.nome=q.nome; n.setor=q.setor; n.cargo=novoCargo; n.funcao=q.funcao; n.sal=q.salario; n.nivel=novoNivel;
+      mudou = true;
+    }
+  });
+  // cards sem cadastro (ex.: direção) sem nível
+  ON.forEach(n=>{ if(!n.nivel){ n.nivel = n.pai===null ? 'ESTRATEGICO' : nivelSugerido(n); mudou=true; } });
+
+  if(mudou) orgSave();
+  if(window._orgRecuperou){ persistAll(); toast(window._orgRecuperou+' pessoa(s) recuperada(s) do organograma para o quadro','success'); window._orgRecuperou=0; }
+}
+
+/* ── Render ── */
+function renderOrg(){
+  if(!ON.length){ if(!orgLoad()) orgDefaultNodes(); }
+  orgSync();
+  orgTreeLayout();
+
+  const stage=document.getElementById('org-stage'); if(!stage) return;
+  const svg=document.getElementById('org-svg');
+
+  // linhas: pai (baixo-centro) -> filho (topo-centro), estilo cotovelo
+  const lines=ON.filter(n=>n.pai&&ON.find(p=>p.id===n.pai)).map(n=>{
+    const p=ON.find(x=>x.id===n.pai);
+    const x1=p.x+ORG_W/2, x2=n.x+ORG_W/2;
+    if(n.y>=p.y){
+      const y1=p.y+ORG_H, y2=n.y, my=y1+ORG_GY/2;
+      return `<path d="M${x1},${y1} L${x1},${my} L${x2},${my} L${x2},${y2}" stroke="#5a5a5a" stroke-width="2" fill="none"/>`;
+    } else { // subordinado numa faixa acima do chefe
+      const y1=p.y, y2=n.y+ORG_H, my=y1-ORG_GY/2;
+      return `<path d="M${x1},${y1} L${x1},${my} L${x2},${my} L${x2},${y2}" stroke="#5a5a5a" stroke-width="2" stroke-dasharray="5 4" fill="none"/>`;
+    }
+  }).join('');
+  svg.innerHTML=lines;
+
+  // faixas de nível
+  const maxX = ON.length ? Math.max(...ON.map(n=>n.x))+ORG_W+80 : 1200;
+  const bw = Math.max(maxX, 1200);
+  const salVis = !document.getElementById('page-organograma').classList.contains('org-hide-sal');
+  document.getElementById('org-bands').innerHTML = ORG_BANDS.map((b,i)=>{
+    const nv=NIVEIS.find(x=>x.k===b.k);
+    const mem=ON.filter(n=>n.nivel===b.k);
+    const massa=mem.reduce((s,n)=>s+(+n.sal||0),0);
+    return `<div class="org-band" data-k="${b.k}" style="left:0;top:${b.top}px;width:${bw}px;height:${b.h}px">
+      <div class="org-band-lbl">
+        <div class="org-band-tit"><span class="org-band-num">${i+1}</span>${nv.nome}</div>
+        <div class="org-band-sub">${nv.desc}</div>
+        <div class="org-band-sub">${mem.length} ${mem.length===1?'pessoa':'pessoas'}<span class="band-sal"> · R$ ${massa.toLocaleString('pt-BR',{maximumFractionDigits:0})}</span></div>
+      </div></div>`;
+  }).join('');
+
+  // nodes
+  const cur=new Set(ON.map(n=>n.id));
+  stage.querySelectorAll('.org-node').forEach(el=>{ if(!cur.has(+el.dataset.id)) el.remove(); });
+
+  ON.forEach(n=>{
+    let el=stage.querySelector('.org-node[data-id="'+n.id+'"]');
+    if(!el){
+      el=document.createElement('div'); el.className='org-node'; el.dataset.id=n.id;
+      el.innerHTML='<div class="on-bar"></div><div class="on-body">'
+        +'<div class="on-btns">'
+        +'<button class="on-btn" data-act="edit" title="Editar">✎</button>'
+        +'<button class="on-btn" data-act="add" title="Adicionar subordinado">+</button>'
+        +'<button class="on-btn" data-act="del" style="color:#f87171" title="Remover">✕</button>'
+        +'</div>'
+        +'<div class="on-name"></div><div class="on-cargo"></div>'
+        +'<div class="on-tags"><span class="on-tag"></span><span class="on-sal"></span></div></div>';
+      el.addEventListener('mousedown',ev=>orgNDown(ev,n.id));
+      el.querySelector('[data-act="edit"]').addEventListener('click',ev=>{ev.stopPropagation();orgOpenEdit(n.id);});
+      el.querySelector('[data-act="add"]').addEventListener('click',ev=>{ev.stopPropagation();orgAddChild(n.id);});
+      el.querySelector('[data-act="del"]').addEventListener('click',ev=>{ev.stopPropagation();orgRemNode(n.id);});
+      stage.appendChild(el);
+    }
+    const cor=getSetorCor(n.setor);
+    el.style.left=n.x+'px'; el.style.top=n.y+'px';
+    el.style.borderLeft='5px solid '+cor;
+    el.style.background='linear-gradient(90deg,'+cor+'38 0%,'+cor+'10 70%),var(--bg2)';
+    el.querySelector('.on-name').textContent=n.nome;
+    el.querySelector('.on-cargo').textContent=n.cargo+(n.funcao&&n.funcao!==n.cargo?' · '+n.funcao:'');
+    const tag=el.querySelector('.on-tag');
+    tag.textContent=n.setor; tag.style.background=cor+'22'; tag.style.color=cor; tag.style.border='1px solid '+cor+'44';
+    el.querySelector('.on-sal').textContent=n.sal?('R$'+Number(n.sal).toFixed(0)):'';
+    el.classList.toggle('on', n.id===oSel);
+    el.classList.remove('drop-target');
+  });
+  orgApplyVP();
+}
+function orgRenderLegend(){
+  const lg=document.getElementById('org-legend'); if(!lg) return;
+  const cont={}; ON.forEach(n=>{ const s=(n.setor||'OUTRO').toUpperCase(); cont[s]=(cont[s]||0)+1; });
+  lg.innerHTML='<div class="lg-tit">SETORES · clique na cor para mudar</div>'+Object.keys(cont).sort().map(s=>{
+    const c=getSetorCor(s);
+    return `<label class="lg-row"><input type="color" value="${c}" data-s="${s}" onchange="orgMudarCorSetor(this.dataset.s,this.value)"><span style="color:${c}">${s}</span><span class="lg-n">${cont[s]}</span></label>`;
+  }).join('');
+}
+
+function orgApplyVP(){
+  const s=document.getElementById('org-stage'); if(s) s.style.transform='translate('+oVx+'px,'+oVy+'px) scale('+oVs+')';
+  const l=document.getElementById('org-zlbl'); if(l) l.textContent=Math.round(oVs*100)+'%';
+}
+
+/* ── Drag: soltar em cima de outro card = reparent ── */
+function orgNDown(e,id){
+  if(e.button!==0||oSpc) return;
+  e.stopPropagation();
+  oDrag=id; oDragMoved=false;
+  const r=e.currentTarget.getBoundingClientRect();
+  oDoff={x:(e.clientX-r.left)/oVs, y:(e.clientY-r.top)/oVs};
+}
+
+function orgDescende(id, possivelDescendente){
+  // true se 'possivelDescendente' está na subárvore de 'id'
+  let atual=ON.find(n=>n.id===possivelDescendente);
+  while(atual){
+    if(atual.id===id) return true;
+    atual=ON.find(n=>n.id===atual.pai);
+  }
+  return false;
+}
+
+function orgWrapDown(e){
+  if(e.button===1||(e.button===0&&oSpc)){oPan=true;oPanS={x:e.clientX-oVx,y:e.clientY-oVy};}
+  else if(e.button===0&&e.target.id==='org-wrap'){oSel=null;renderOrg();}
+}
+function orgWrapMove(e){
+  if(oPan){oVx=e.clientX-oPanS.x;oVy=e.clientY-oPanS.y;orgApplyVP();return;}
+  if(oDrag!==null){
+    oDragMoved=true;
+    const n=ON.find(x=>x.id===oDrag); if(!n)return;
+    const wr=document.getElementById('org-wrap').getBoundingClientRect();
+    n.x=(e.clientX-wr.left)/oVs-oVx/oVs-oDoff.x;
+    n.y=(e.clientY-wr.top)/oVs-oVy/oVs-oDoff.y;
+    // mover só o card visual (sem re-layout durante o drag)
+    const el=document.querySelector('.org-node[data-id="'+oDrag+'"]');
+    if(el){el.style.left=n.x+'px';el.style.top=n.y+'px';el.classList.add('dragging');}
+    // highlight card alvo sob o mouse
+    if(oHoverTarget){oHoverTarget.classList.remove('drop-target');oHoverTarget.classList.remove('drop-sibling');oHoverTarget=null;}
+    const under=document.elementsFromPoint(e.clientX,e.clientY).find(x=>x.classList&&x.classList.contains('org-node')&&+x.dataset.id!==oDrag);
+    document.querySelectorAll('.org-band.hot').forEach(b=>b.classList.remove('hot'));
+    if(under && !orgDescende(oDrag, +under.dataset.id)){
+      under.classList.add('drop-target');   // verde = vai virar subordinado
+      oHoverTarget=under;
+    } else if(!under){
+      const py=(e.clientY-wr.top-oVy)/oVs;
+      const b=orgBandAt(py);
+      if(b && b.k!==n.nivel){ const bel=document.querySelector('.org-band[data-k="'+b.k+'"]'); if(bel) bel.classList.add('hot'); }
+    }
+  }
+}
+function orgReordenar(draggedId, dropX){
+  // Reordena o card entre os irmãos (mesmo pai) com base na posição X onde foi solto
+  const n = ON.find(x=>x.id===draggedId); if(!n) return false;
+  const irmaos = ON.filter(x=>x.pai===n.pai && x.id!==draggedId);
+  if(!irmaos.length) return false;
+
+  // Determinar nova posição: conta quantos irmãos têm centro à esquerda do drop
+  const centros = irmaos.map(s=>({id:s.id, cx:s.x+ORG_W/2})).sort((a,b)=>a.cx-b.cx);
+  let posInsercao = centros.filter(s=>s.cx < dropX).length;
+
+  // Remover dragged do array e reinserir na posição certa entre os irmãos
+  const idxDragged = ON.indexOf(n);
+  ON.splice(idxDragged,1);
+
+  // encontrar índice no ON do irmão que ficará logo após
+  if(posInsercao >= centros.length){
+    // vai para depois do último irmão
+    const ultimo = ON.findIndex(x=>x.id===centros[centros.length-1].id);
+    ON.splice(ultimo+1,0,n);
+  } else {
+    const alvo = ON.findIndex(x=>x.id===centros[posInsercao].id);
+    ON.splice(alvo,0,n);
+  }
+  return true;
+}
+
+function orgWrapUp(e){
+  if(oDrag!==null){
+    const dragged=oDrag; oDrag=null;
+    const el=document.querySelector('.org-node[data-id="'+dragged+'"]');
+    if(el) el.classList.remove('dragging');
+
+    if(oDragMoved){
+      const n=ON.find(x=>x.id===dragged);
+      const under=document.elementsFromPoint(e.clientX,e.clientY).find(x=>x.classList&&x.classList.contains('org-node')&&+x.dataset.id!==dragged);
+
+      if(under){
+        const alvo=+under.dataset.id;
+
+        if(!orgDescende(dragged, alvo)){
+          // ── Soltou em cima de um card = vira subordinado dele (sempre) ──
+          n.pai=alvo;
+          orgSave();
+          const chefe=ON.find(x=>x.id===alvo);
+          toast(n.nome.split(' ')[0]+' agora responde a '+chefe.nome.split(' ')[0],'success');
+        } else {
+          toast('⚠ Não é possível: criaria um ciclo','error');
+        }
+      } else {
+        // ── ESPAÇO VAZIO ──
+        const wr=document.getElementById('org-wrap').getBoundingClientRect();
+        const py=(e.clientY-wr.top-oVy)/oVs;
+        const b=orgBandAt(py);
+        const reord=orgReordenar(dragged, n.x+ORG_W/2);
+        if(b && b.k!==n.nivel){
+          // soltou em outra faixa = muda o nível (grava no cadastro)
+          n.nivel=b.k;
+          orgGravarNoCadastro(n,{nivel:b.k});
+          orgSave();
+          toast(n.nome.split(' ')[0]+' → '+nivelLabel(b.k),'success');
+        } else if(reord){
+          orgSave();
+          toast(n.nome.split(' ')[0]+' reposicionado','success');
+        }
+      }
+      document.querySelectorAll('.org-band.hot').forEach(x=>x.classList.remove('hot'));
+      renderOrg(); // re-layout sempre
+    } else {
+      orgOpenEdit(dragged);
+    }
+    if(oHoverTarget){oHoverTarget.classList.remove('drop-target');oHoverTarget.classList.remove('drop-sibling');oHoverTarget=null;}
+  }
+  oPan=false;
+}
+function orgWrapWheel(e){
+  e.preventDefault();
+  if(e.ctrlKey || e.metaKey){
+    // Pinça no trackpad (gera wheel com ctrlKey) ou Ctrl+scroll = ZOOM
+    const d = -e.deltaY * 0.012;
+    const r=document.getElementById('org-wrap').getBoundingClientRect();
+    const mx=e.clientX-r.left,my=e.clientY-r.top;
+    const bx=(mx-oVx)/oVs,by=(my-oVy)/oVs;
+    oVs=Math.min(2.5,Math.max(.15,oVs+d));
+    oVx=mx-bx*oVs;oVy=my-by*oVs;orgApplyVP();
+  } else {
+    // Dois dedos no trackpad / scroll normal = MOVER a tela
+    oVx -= e.deltaX;
+    oVy -= e.deltaY;
+    orgApplyVP();
+  }
+}
+function orgZoom(d){
+  const r=document.getElementById('org-wrap');
+  if(!r) return;
+  const rb=r.getBoundingClientRect();
+  const bx=(rb.width/2-oVx)/oVs,by=(rb.height/2-oVy)/oVs;
+  oVs=Math.min(2.5,Math.max(.15,oVs+d));
+  oVx=rb.width/2-bx*oVs;oVy=rb.height/2-by*oVs;orgApplyVP();
+}
+function orgFitAll(){
+  if(!ON.length)return;
+  orgTreeLayout();
+  const xs=ON.map(n=>n.x),P=30;
+  const last=ORG_BANDS[ORG_BANDS.length-1];
+  const x0=-P,y0=-P,x1=Math.max(Math.max(...xs)+ORG_W+80,1200)+P,y1=(last?last.top+last.h:Math.max(...ON.map(n=>n.y))+ORG_H)+P;
+  const w=document.getElementById('org-wrap');
+  if(!w) return;
+  const r=w.getBoundingClientRect();
+  oVs=Math.min(r.width/(x1-x0),r.height/(y1-y0),1);
+  oVx=-x0*oVs+(r.width-(x1-x0)*oVs)/2;
+  oVy=-y0*oVs+(r.height-(y1-y0)*oVs)/2;
+  orgApplyVP();
+}
+
+/* ── Adicionar / Remover ── */
+function orgAdd(){
+  const root=ON.find(n=>n.pai===null);
+  const n={id:oUid(),nome:'NOVO',cargo:'CARGO',funcao:'',setor:'DEPOT',nivel:'EXECUCAO',sal:0,pai:root?root.id:null,_novo:true};
+  ON.push(n);renderOrg();orgOpenEdit(n.id);
+}
+function orgAddChild(paiId){
+  const pai=ON.find(x=>x.id===paiId);
+  const n={id:oUid(),nome:'NOVO',cargo:'CARGO',funcao:'',setor:pai?pai.setor:'DEPOT',nivel:'EXECUCAO',sal:0,pai:paiId,_novo:true};
+  ON.push(n);orgSave();renderOrg();orgOpenEdit(n.id);
+}
+function orgRemNode(id){
+  if(!confirm('Remover do organograma? Os subordinados sobem para o chefe acima.'))return;
+  const n=ON.find(x=>x.id===id);
+  const novoPai=n?n.pai:null;
+  ON.filter(x=>x.pai===id).forEach(x=>{x.pai=novoPai;});
+  ON=ON.filter(x=>x.id!==id);
+  if(oSel===id)oSel=null;
+  orgCloseModal();orgSave();renderOrg();
+}
+function orgDeleteCurrent(){orgRemNode(+document.getElementById('org-eid').value);}
+function orgReset(){
+  if(confirm('Refazer o organograma padrão a partir do Quadro de Pessoal? Suas conexões serão perdidas.')){
+    localStorage.removeItem('ziran-org5');ON=[];renderOrg();setTimeout(orgFitAll,60);
+  }
+}
+
+/* ── Modal editar ── */
+function orgOpenEdit(id){
+  oSel=id; renderOrg();
+  const n=ON.find(x=>x.id===id); if(!n)return;
+  document.getElementById('org-eid').value=id;
+  document.getElementById('org-enome').value=n.nome;
+  document.getElementById('org-ecargo').value=n.cargo;
+  document.getElementById('org-efuncao').value=n.funcao||'';
+  const setores=[...new Set([...Object.keys(ORG_COR).filter(k=>!['MECÂNICA','MANUTENCAO'].includes(k)),...quadro.map(q=>q.setor),...ON.map(x=>x.setor)].filter(Boolean))].sort();
+  document.getElementById('org-esetor').innerHTML=setores.map(s=>`<option value="${s}" ${s===n.setor?'selected':''}>${s}</option>`).join('');
+  document.getElementById('org-enivel').innerHTML=NIVEIS.map((v,i)=>`<option value="${v.k}" ${v.k===n.nivel?'selected':''}>${i+1} · ${v.nome}</option>`).join('');
+  document.getElementById('org-esal').value=n.sal||'';
+  const subs=orgFilhos(id);
+  document.getElementById('org-esubs').innerHTML=subs.length
+    ?subs.map(s=>'<div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg3);border:1px solid var(--border);border-radius:5px;padding:5px 9px;font-size:11px">'
+      +'<span style="font-weight:600">'+s.nome+'</span><span style="color:var(--text3);margin:0 6px">'+s.cargo+'</span>'
+      +'<button onclick="orgSoltar('+s.id+')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:13px" title="Subir um nível">✕</button></div>').join('')
+    :'<div style="font-size:11px;color:var(--text3)">Nenhum — arraste alguém para cima deste card</div>';
+  document.getElementById('org-modal').style.display='flex';
+}
+function orgSoltar(id){
+  // subordinado sobe um nível (vai para o avô)
+  const n=ON.find(x=>x.id===id); if(!n) return;
+  const pai=ON.find(x=>x.id===n.pai);
+  n.pai=pai?pai.pai:null;
+  orgSave();renderOrg();
+  orgOpenEdit(+document.getElementById('org-eid').value);
+}
+function orgCloseModal(){
+  document.getElementById('org-modal').style.display='none';
+  // card novo cancelado sem salvar = descarta
+  const pend=ON.filter(x=>x._novo);
+  if(pend.length){ ON=ON.filter(x=>!x._novo); oSel=null; orgSave(); renderOrg(); }
+}
+function orgSaveCurrent(){
+  const id=+document.getElementById('org-eid').value;
+  const n=ON.find(x=>x.id===id); if(!n)return;
+  const norm=s=>(s||'').trim().toUpperCase();
+  const nomeAntigo=n.nome;
+  const novoNome=norm(document.getElementById('org-enome').value);
+  if(!novoNome||novoNome==='NOVO'){ toast('Informe o nome da pessoa.','error'); return; }
+  n.nome=novoNome;
+  n.cargo=norm(document.getElementById('org-ecargo').value);
+  n.funcao=norm(document.getElementById('org-efuncao').value)||n.cargo;
+  n.setor=document.getElementById('org-esetor').value;
+  n.nivel=document.getElementById('org-enivel').value;
+  n.sal=parseFloat(document.getElementById('org-esal').value)||0;
+
+  // ── Sincroniza com o QUADRO DE PESSOAL ──
+  const hoje=new Date().toLocaleDateString('pt-BR');
+  let q = n.qid ? quadro.find(a=>a.uid===n.qid) : null;
+  const ehRaizFora = n.pai===null && !q;   // direção que não está no quadro fica só no organograma
+  if(q){
+    const h=q.historico=q.historico||[];
+    if(q.nome!==n.nome)        h.push({desc:`Nome: ${q.nome} → ${n.nome}`,data:hoje});
+    if((q.cargo||q.funcao)!==n.cargo) h.push({desc:`Cargo: ${q.cargo||q.funcao} → ${n.cargo}`,data:hoje});
+    if(q.funcao!==n.funcao)    h.push({desc:`Função: ${q.funcao} → ${n.funcao}`,data:hoje});
+    if(q.setor!==n.setor)      h.push({desc:`Setor: ${q.setor} → ${n.setor}`,data:hoje});
+    if(q.nivel!==n.nivel)      h.push({desc:`Nível: ${nivelLabel(q.nivel)} → ${nivelLabel(n.nivel)}`,data:hoje});
+    if(q.salario!==n.sal)      h.push({desc:`Salário: R$${(+q.salario||0).toFixed(2)} → R$${n.sal.toFixed(2)}`,data:hoje});
+    Object.assign(q,{nome:n.nome,cargo:n.cargo,funcao:n.funcao,setor:n.setor,nivel:n.nivel,salario:n.sal});
+    persistAll();
+  } else if(!ehRaizFora){
+    const uid=novoUid(); n.qid=uid;
+    quadro.push({uid,nome:n.nome,funcao:n.funcao,cargo:n.cargo,setor:n.setor,nivel:n.nivel,salario:n.sal,
+      status:'ATUAL',admissao:'',obs:'',historico:[{desc:'Incluído pelo organograma',data:hoje}]});
+    persistAll();
+    toast(n.nome.split(' ')[0]+' incluído no Quadro de Pessoal','success');
+  }
+  delete n._novo;
+  orgCloseModal();orgSave();renderOrg();
+}
+
+/* ── Teclas ── */
+document.addEventListener('keydown',ev=>{
+  if(ev.code==='Space'&&!ev.target.matches('input,select,textarea')){oSpc=true;ev.preventDefault();const w=document.getElementById('org-wrap');if(w)w.style.cursor='grab';}
+  if(ev.code==='Escape'){oSel=null;orgCloseModal();renderOrg();}
+});
+document.addEventListener('keyup',ev=>{if(ev.code==='Space'){oSpc=false;const w=document.getElementById('org-wrap');if(w)w.style.cursor='';}});
+
+/* ── Ocultar/mostrar salários ── */
+function orgApplySal(){
+  let oculto=true; try{ oculto = localStorage.getItem('ziran-org-sal')!=='1'; }catch(e){}
+  const pg=document.getElementById('page-organograma'); if(pg) pg.classList.toggle('org-hide-sal', oculto);
+  const b=document.getElementById('org-salbtn'); if(b) b.textContent = oculto ? '👁 Mostrar salários' : '🙈 Ocultar salários';
+}
+function orgToggleSal(){
+  const pg=document.getElementById('page-organograma');
+  const mostrar = pg.classList.contains('org-hide-sal');
+  try{ localStorage.setItem('ziran-org-sal', mostrar?'1':'0'); }catch(e){}
+  orgApplySal();
+  if(ON.length) renderOrg();
+}
+document.addEventListener('DOMContentLoaded', orgApplySal);
+if(document.readyState!=='loading') orgApplySal();
+
+/* ── Imprimir ── */
+function orgPrint(){window.print();}
+
+// =====================================
+// SETORES
+// =====================================
+function renderSetores() {
+  const ativos = quadro.filter(q=>q.status==='ATUAL');
+  const totalSal = ativos.reduce((s,q)=>s+q.salario,0);
+  const setores = {};
+  ativos.forEach(q => { if(!setores[q.setor]) setores[q.setor]=[]; setores[q.setor].push(q); });
+  const nSetores = Object.keys(setores).length;
+
+  document.getElementById('kpi-setores').innerHTML = `
+    <div class="kpi green"><div class="kpi-label">Total ativos</div><div class="kpi-value">${ativos.length}</div></div>
+    <div class="kpi amber"><div class="kpi-label">Setores</div><div class="kpi-value">${nSetores}</div></div>
+    <div class="kpi blue"><div class="kpi-label">Massa salarial</div><div class="kpi-value">R$${(totalSal/1000).toFixed(1)}k</div></div>
+    <div class="kpi red"><div class="kpi-label">Média salarial</div><div class="kpi-value">R$${Math.round(totalSal/ativos.length).toLocaleString('pt-BR')}</div></div>
+  `;
+
+  const grid = document.getElementById('setor-grid');
+  const sc = avatarColor;
+  const ini = initials;
+  grid.innerHTML = Object.entries(setores).sort((a,b)=>b[1].length-a[1].length).map(([setor, membros]) => {
+    const massaSal = membros.reduce((s,m)=>s+m.salario,0);
+    const sColor = sc(setor);
+    return `<div class="setor-card">
+      <div class="setor-header">
+        <div>
+          <div class="setor-name" style="color:${sColor}">${setor}</div>
+          <div style="font-size:11px;color:var(--text2)">Massa: R$${massaSal.toFixed(2).replace('.',',')}</div>
+        </div>
+        <div class="setor-count">${membros.length} ${membros.length===1?'pessoa':'pessoas'}</div>
+      </div>
+      <div class="setor-members">
+        ${membros.map(m => `
+          <div class="setor-member">
+            <div class="avatar" style="background:${sc(m.nome)}22;color:${sc(m.nome)};border:1px solid ${sc(m.nome)}44;width:28px;height:28px;font-size:10px">${ini(m.nome)}</div>
+            <div class="setor-member-info">
+              <div class="setor-member-name">${m.nome.split(' ')[0]} ${m.nome.split(' ')[1]||''}</div>
+              <div class="setor-member-role">${m.funcao}</div>
+            </div>
+            <div class="setor-member-sal">R$${m.salario.toFixed(0)}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// =====================================
+// HORÁRIOS
+// =====================================
+const HORAS = ['7H','8H','9H','10H','11H','12H','13H','14H','15H','16H','17H','18H','19H','20H','21H','22H','23H','0H','1H','2H','3H','4H','5H','6H'];
+
+function renderHorarios() {
+  const areas = [...new Set(horarios.map(h=>h.area))];
+  const sel = document.getElementById('filter-area-hor');
+  sel.innerHTML = '<option value="">Todas as áreas</option>' + areas.map(a=>`<option value="${a}">${a}</option>`).join('');
+  sel.onchange = renderHorarios;
+
+  const filtroArea = sel.value;
+  const dados = filtroArea ? horarios.filter(h=>h.area===filtroArea) : horarios;
+
+  const tbody = document.getElementById('tbody-horarios');
+  tbody.innerHTML = dados.map(h => {
+    const turnoCells = h.turnos.map((t,i) => {
+      return `<td style="padding:4px 2px;text-align:center">
+        <div class="turno-block ${t?'on':'off'}" onclick="toggleTurno(this,${horarios.indexOf(h)},${i})" title="${HORAS[i]}"></div>
+      </td>`;
+    }).join('');
+    const av = avatarColor(h.nome);
+    const ini = initials(h.nome);
+    return `<tr>
+      <td><span class="badge badge-gray" style="font-size:10px">${h.area}</span></td>
+      <td style="font-size:12px;color:var(--text2)">${h.setor}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="avatar" style="background:${av}22;color:${av};border:1px solid ${av}44;width:26px;height:26px;font-size:10px">${ini}</div>
+          <span style="font-size:12px;font-weight:500">${h.nome}</span>
+        </div>
+      </td>
+      <td style="font-size:12px;color:var(--text2)">${h.funcao}</td>
+      <td style="font-size:12px;color:var(--green);font-family:monospace">R$${h.salario.toFixed(0)}</td>
+      ${turnoCells}
+    </tr>`;
+  }).join('');
+}
+
+function toggleTurno(el, rowIdx, colIdx) {
+  horarios[rowIdx].turnos[colIdx] = horarios[rowIdx].turnos[colIdx] ? 0 : 1;
+  persistAll();
+  el.className = 'turno-block ' + (horarios[rowIdx].turnos[colIdx] ? 'on' : 'off');
+}
+
+// =====================================
+// PROGRAMAÇÕES
+// =====================================
+function updateProgFields() {
+  const tipo = document.getElementById('p-tipo').value;
+  const extra = document.getElementById('p-extra-field');
+  const extraLabel = document.getElementById('p-extra-label');
+  const extraInput = document.getElementById('p-extra');
+  const datesRow = document.getElementById('p-dates');
+
+  if(tipo==='ferias') {
+    datesRow.style.display='grid';
+    extra.style.display='flex';
+    extraLabel.textContent='Obs / Substituto';
+    extraInput.placeholder='Nome do substituto (opcional)';
+  } else if(tipo==='demissao') {
+    datesRow.style.display='grid';
+    document.getElementById('p-fim').closest('.form-group').style.display='none';
+    extra.style.display='flex';
+    extraLabel.textContent='Motivo da demissão';
+    extraInput.placeholder='Ex: Pedido de demissão, Justa causa...';
+  } else if(tipo==='promocao') {
+    datesRow.style.display='none';
+    extra.style.display='flex';
+    extraLabel.textContent='Detalhes (cargo/salário novo)';
+    extraInput.placeholder='Ex: Promoção para Conferente Pleno, novo salário R$3.000';
+  } else if(tipo==='movimentacao') {
+    datesRow.style.display='none';
+    extra.style.display='flex';
+    extraLabel.textContent='Novo setor / função';
+    extraInput.placeholder='Ex: De DEPOT para ARMAZEM';
+  }
+}
+
+function fillColabSelect() {
+  const sel = document.getElementById('p-colab');
+  sel.innerHTML = quadro.filter(q=>q.status==='ATUAL').sort((a,b)=>a.nome.localeCompare(b.nome)).map(q=>`<option value="${q.nome}">${q.nome.split(' ')[0]} ${q.nome.split(' ')[1]||''} — ${q.funcao}</option>`).join('');
+}
+
+function renderProgramacoes() {
+  const total = programacoes.length;
+  const ferias = programacoes.filter(p=>p.tipo==='ferias').length;
+  const demissoes = programacoes.filter(p=>p.tipo==='demissao').length;
+  const promocoes = programacoes.filter(p=>p.tipo==='promocao').length;
+
+  document.getElementById('kpi-prog').innerHTML = `
+    <div class="kpi blue"><div class="kpi-label">Total programado</div><div class="kpi-value">${total}</div></div>
+    <div class="kpi green"><div class="kpi-label">Férias</div><div class="kpi-value">${ferias}</div></div>
+    <div class="kpi red"><div class="kpi-label">Desligamentos</div><div class="kpi-value">${demissoes}</div></div>
+    <div class="kpi amber"><div class="kpi-label">Promoções</div><div class="kpi-value">${promocoes}</div></div>
+  `;
+  filterProg();
+}
+
+function filterProg() {
+  const tipo = document.getElementById('filter-tipo-prog').value;
+  const filtered = tipo ? programacoes.filter(p=>p.tipo===tipo) : programacoes;
+  const ICONS = {ferias:'🌴',demissao:'❌',promocao:'⭐',movimentacao:'🔄'};
+  const LABELS = {ferias:'Férias',demissao:'Demissão',promocao:'Promoção',movimentacao:'Movimentação'};
+  const BADGE = {ferias:'badge-green',demissao:'badge-red',promocao:'badge-amber',movimentacao:'badge-blue'};
+
+  const list = document.getElementById('prog-list');
+  const empty = document.getElementById('prog-empty');
+
+  if(!filtered.length) {
+    list.innerHTML=''; empty.style.display='block'; return;
+  }
+  empty.style.display='none';
+  list.innerHTML = filtered.map((p,i) => `
+    <div class="prog-card">
+      <div class="prog-icon ${p.tipo}">${ICONS[p.tipo]}</div>
+      <div class="prog-info">
+        <div class="prog-nome">${p.colab}</div>
+        <div class="prog-detalhe">${p.extra||''} ${p.inicio?'· '+p.inicio:''} ${p.fim?'→ '+p.fim:''}</div>
+      </div>
+      <div>
+        <span class="badge ${BADGE[p.tipo]}">${LABELS[p.tipo]}</span>
+        <div class="prog-data">${p.criado||''}</div>
+      </div>
+      <button class="btn btn-ghost" style="padding:4px 8px;font-size:12px;color:#f87171" onclick="deleteProg(${i})">✕</button>
+    </div>
+  `).join('');
+}
+
+function deleteProg(i) {
+  programacoes.splice(i,1);
+  persistAll();
+  renderProgramacoes();
+}
+
+function saveProg() {
+  const colab = document.getElementById('p-colab').value;
+  const tipo = document.getElementById('p-tipo').value;
+  const inicio = document.getElementById('p-inicio').value;
+  const fim = document.getElementById('p-fim').value;
+  const extra = document.getElementById('p-extra').value;
+  if(!colab) { toast('Selecione o colaborador.','error'); return; }
+  programacoes.push({colab, tipo, inicio, fim, extra, criado: new Date().toLocaleDateString('pt-BR')});
+  persistAll();
+  closeModal('modal-add-prog');
+  renderProgramacoes();
+  renderCalendar();
+  toast('Programação salva!','success');
+}
+
+// =====================================
+// CALENDÁRIO
+// =====================================
+const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const DIAS = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+
+function progNoDia(date){ openModal('modal-add-prog'); document.getElementById('p-inicio').value=date; }
+function changeMonth(d) { calMonth.setMonth(calMonth.getMonth()+d); renderCalendar(); }
+
+function renderCalendar() {
+  const y = calMonth.getFullYear(); const m = calMonth.getMonth();
+  document.getElementById('cal-month-label').textContent = `${MESES[m]} ${y}`;
+  const grid = document.getElementById('calendar-grid');
+  const dias = DIAS.map(d=>`<div class="cal-header-cell">${d}</div>`).join('');
+  const firstDay = new Date(y,m,1).getDay();
+  const totalDays = new Date(y,m+1,0).getDate();
+  const today = new Date();
+  let cells = '';
+  for(let i=0;i<firstDay;i++) cells += `<div></div>`;
+  for(let d=1;d<=totalDays;d++) {
+    const date = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const eventos = programacoes.filter(p => p.inicio<=date && (p.fim>=date || !p.fim && p.inicio===date));
+    const isToday = today.getFullYear()===y && today.getMonth()===m && today.getDate()===d;
+    const hasEv = eventos.length>0;
+    cells += `<div class="cal-day ${isToday?'today':''} ${hasEv?'has-event':''}" style="cursor:pointer" title="Nova programação em ${d}/${m+1}" onclick="progNoDia('${date}')">
+      <div class="cal-day-num">${d}</div>
+      ${eventos.slice(0,2).map(e=>`<div class="cal-event ${e.tipo}">${e.colab.split(' ')[0]}</div>`).join('')}
+    </div>`;
+  }
+  grid.innerHTML = dias + cells;
+}
+
+// =====================================
+// IMPORTAR XLSX
+// =====================================
+function handleFile(e) { processXLSX(e.target.files[0]); }
+function handleDrop(e) { e.preventDefault(); document.getElementById('import-zone').classList.remove('drag'); processXLSX(e.dataTransfer.files[0]); }
+
+function processXLSX(file) {
+  if(!file) return;
+  if(/\.json$/i.test(file.name)){ backupRestaurarArquivo(file); return; }
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const wb = XLSX.read(e.target.result, {type:'array'});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const data = XLSX.utils.sheet_to_json(ws, {defval:''});
+      const novos = data.filter(r=>r.NOME||r['NOME']).map(r=>({
+        nome: (r.NOME||'').toString().trim().toUpperCase(),
+        cargo: (r.CARGO||'').toString().trim().toUpperCase(),
+        funcao: (r['FUNCAO']||r['FUNÇÃO']||r['DESCRIÇÃO DA FUNÇÃO']||r['DESCRICAO DA FUNCAO']||'').toString().trim(),
+        setor: (r.SETOR||'').toString().trim().toUpperCase(),
+        salario: parseFloat(r.SALARIO||r['SALÁRIO']||r.ATUAL||0)||0,
+        status: (r.STATUS||'ATUAL').toString().trim().toUpperCase(),
+        admissao: (r.ADMISSAO||r['ADMISSÃO']||'').toString().trim(),
+        obs: (r.OBS||r.OBSERVACAO||r['OBSERVAÇÃO']||'').toString().trim(),
+        nivel: nivelDeTexto(r.NIVEL||r['NÍVEL']||r.FAIXA||''),
+      })).map(r=>{ if(!r.cargo) r.cargo=r.funcao; return r; }).filter(r=>r.nome);
+      if(novos.length) {
+        quadro = novos;
+        garantirIds();
+        garantirNiveis();
+        persistAll();
+        document.getElementById('last-update').textContent = `Importado: ${file.name} (${novos.length} registros)`;
+        renderImportInfo();
+        toast(`${novos.length} colaboradores importados!`, 'success');
+      } else { toast('Nenhum dado reconhecido na planilha.','error'); }
+    } catch(err) { toast('Erro ao ler arquivo: ' + err.message,'error'); }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function loadDemo() {
+  quadro = [...QUADRO_BASE];
+  quadro = quadro.map(q=>({...q}));
+  horarios = [...HORARIOS_BASE];
+  garantirIds();
+  garantirNiveis();
+  persistAll();
+  document.getElementById('last-update').textContent = 'Dados padrão carregados (ORGANOGRAMA.xlsx)';
+  renderImportInfo();
+  toast('Dados da planilha carregados!','success');
+}
+
+function clearData() {
+  if(confirm('Limpar todos os dados?')) { quadro=[]; programacoes=[]; ocorrencias=[]; persistAll(); renderImportInfo(); toast('Dados limpos.'); }
+}
+
+function renderImportInfo() {
+  const ativos = quadro.filter(q=>q.status==='ATUAL').length;
+  const desl = quadro.filter(q=>q.status==='DESLIGADO').length;
+  const setores = [...new Set(quadro.map(q=>q.setor))].length;
+  document.getElementById('info-total').textContent = quadro.length;
+  document.getElementById('info-ativos').textContent = ativos;
+  document.getElementById('info-desl').textContent = desl;
+  document.getElementById('info-setores').textContent = setores;
+}
+
+// =====================================
+// UTILS
+// =====================================
+function openNovoColab() {
+  document.getElementById('modal-colab-title').textContent = 'Novo Colaborador';
+  document.getElementById('modal-colab-sub').textContent = '';
+  document.getElementById('edit-idx').value = '';
+  ['f-nome','f-funcao','f-obs'].forEach(i=>document.getElementById(i).value='');
+    document.getElementById('f-cargo-novo').value='';
+    document.getElementById('novo-cargo-wrap').style.display='none';
+    populateCargoDropdown('');
+  document.getElementById('f-salario').value='';
+  document.getElementById('f-status').value='ATUAL';
+  document.getElementById('f-admissao').value='';
+  document.getElementById('aviso-setor').style.display='none';
+  document.getElementById('novo-setor-wrap').style.display='none';
+  document.getElementById('historico-wrap').style.display='none';
+  document.getElementById('sal-anterior').textContent='';
+  document.getElementById('sal-diff').textContent='—';
+  document.getElementById('sal-diff').style.color='var(--text3)';
+  populateSetorDropdown('');
+  populateNivelDropdown('EXECUCAO');
+  document.getElementById('modal-av').textContent='';
+  document.getElementById('modal-av').style.background='var(--bg3)';
+  document.getElementById('modal-add-colab').classList.add('open');
+}
+
+function openModal(id) {
+  if(id==='modal-add-colab') {
+    // chamado diretamente apenas por editColab — só abre o overlay
+    // Para NOVO use openNovoColab()
+  }
+  if(id==='modal-add-prog') {
+    fillColabSelect();
+    document.getElementById('p-tipo').value='ferias';
+    document.getElementById('p-inicio').value='';
+    document.getElementById('p-fim').value='';
+    document.getElementById('p-extra').value='';
+    document.getElementById('p-dates').style.display='grid';
+    document.querySelectorAll('#p-dates .form-group').forEach(g=>g.style.display='flex');
+    updateProgFields();
+  }
+  document.getElementById(id).classList.add('open');
+}
+
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.overlay').forEach(o => o.addEventListener('click', function(e) { if(e.target===this) this.classList.remove('open'); }));
+
+function toast(msg, type='success') {
+  const t = document.getElementById('toast');
+  t.className = 'toast show ' + type;
+  t.innerHTML = (type==='success'?'✓':'⚠') + ' ' + msg;
+  clearTimeout(t._t);
+  t._t = setTimeout(()=>t.classList.remove('show'), 3000);
+}
+
+// =====================================
+
+// =====================================
+// QUADRO VISUAL DRAG & DROP
+// =====================================
+const SETOR_COLORS = {};
+const COLOR_POOL = ['#CC0000','#F59E0B','#3B82F6','#22C55E','#A855F7','#F97316','#14B8A6','#EC4899','#06B6D4','#84CC16'];
+function setorColor(setor) { return getSetorCor(setor); }
+
+let kanbanDragIdx = null;
+let kanbanFilter = '';
+let kanbanStatusFilter = 'ATUAL';
+
+// ---- QUADRO VISUAL (GRADE SETOR x FUNÇÃO) ----
+// Estrutura: QV[setor][funcao] = [idxColaborador, ...]
+// Setores fixos nas colunas, funções nas linhas (dinâmico)
+
+const QV_SETORES = ['DEPOT', 'ARMAZEM', 'TRANSPORTE'];
+const QV_CORES   = { DEPOT:'#CC0000', ARMAZEM:'#3B82F6', TRANSPORTE:'#22C55E' };
+
+// alocacao: { idxColab: {setor, funcao} }  — apenas os que foram arrastados
+let qvAlocacao = {};
+
+// funcoes que o usuario quer mostrar como linhas
+let qvFuncoes = [];
+
+function qvRecalcFuncoes() {
+  // todas as funções distintas dos ativos + as que já foram alocadas
+  const set = new Set(quadro.filter(q=>q.status==='ATUAL').map(q=>normFunc(q.funcao)));
+  Object.values(qvAlocacao).forEach(a => set.add(a.funcao));
+  qvFuncoes = [...set].sort();
+}
+
+function normFunc(f) { return (f||'').trim().toUpperCase(); }
+
+function resetQuadroVisual() {
+  if(!confirm('Limpar toda a alocação?')) return;
+  qvAlocacao = {};
+  renderQuadroVisual();
+  toast('Alocação resetada.','success');
+}
+
+function renderKanban() { renderQuadroVisual(); }
+function filterKanban() { renderQuadroVisual(); }
+
+function renderQuadroVisual() {
+  qvRecalcFuncoes();
+  const wrap = document.getElementById('quadro-visual-wrap');
+  if(!wrap) return;
+
+  const ativos = quadro.filter(q=>q.status==='ATUAL');
+
+  // Colaboradores não alocados (ficam numa área de origem para arrastar)
+  const alocados = new Set(Object.keys(qvAlocacao).map(Number));
+  const naoAlocados = ativos.filter((_,i) => !alocados.has(i));
+
+  document.getElementById('kb-nao-alocado-count').textContent = naoAlocados.length;
+  const badge = document.getElementById('kb-nao-alocado-badge');
+  badge.style.background = naoAlocados.length > 0 ? '#1a0000' : '#001a08';
+  badge.style.borderColor = naoAlocados.length > 0 ? '#CC000055' : '#22C55E55';
+  badge.style.color = naoAlocados.length > 0 ? '#f87171' : '#22C55E';
+  badge.querySelector('span').textContent = naoAlocados.length;
+  badge.innerHTML = naoAlocados.length > 0
+    ? `⚠ <span id="kb-nao-alocado-count">${naoAlocados.length}</span> não alocados — arraste para a grade`
+    : `✓ <span id="kb-nao-alocado-count">0</span> Todos alocados!`;
+
+  // Calcular funções que realmente aparecem na grade (alocadas)
+  const funcoesNaGrade = [...new Set(Object.values(qvAlocacao).map(a=>a.funcao))].sort();
+
+  let html = '';
+
+  // ===== ÁREA DE ORIGEM (não alocados) =====
+  html += `<div style="margin-bottom:18px">
+    <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:8px">Colaboradores disponíveis — arraste para a grade abaixo</div>
+    <div id="qv-origem" class="qv-origem"
+      ondragover="event.preventDefault()"
+      ondrop="qvDropOrigem(event)">
+      ${naoAlocados.map(m => {
+        const idx = quadro.indexOf(m);
+        const av = avatarColor(m.nome);
+        const ini = initials(m.nome);
+        return `<div class="qv-chip" draggable="true"
+          ondragstart="qvDragStart(event,${idx})"
+          ondragend="qvDragEnd(event)">
+          <div class="avatar" style="background:${av}22;color:${av};border:1px solid ${av}44;width:24px;height:24px;font-size:9px;flex-shrink:0">${ini}</div>
+          <div style="min-width:0">
+            <div style="font-size:11px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px">${m.nome.split(' ')[0]} ${m.nome.split(' ')[1]||''}</div>
+            <div style="font-size:10px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px">${m.funcao}</div>
+          </div>
+        </div>`;
+      }).join('')}
+      ${naoAlocados.length===0 ? '<div style="font-size:12px;color:var(--text3);padding:8px">Nenhum colaborador disponível.</div>' : ''}
+    </div>
+  </div>`;
+
+  // ===== GRADE PRINCIPAL =====
+  // Colunas: setores. Linhas: funções alocadas + linha especial pra qualquer cargo
+  html += `<div style="overflow-x:auto">
+  <table class="qv-table">
+    <thead>
+      <tr>
+        <th class="qv-th-func">Função / Cargo</th>
+        ${QV_SETORES.map(s => `<th class="qv-th-setor" style="border-top:3px solid ${QV_CORES[s]}">
+          <div style="color:${QV_CORES[s]};font-weight:800;font-size:13px">${s}</div>
+          <div style="font-size:11px;color:var(--text3);font-weight:400;margin-top:2px">${contarSetor(s)} pessoa${contarSetor(s)!==1?'s':''} · R$${massaSetor(s)}</div>
+        </th>`).join('')}
+      </tr>
+    </thead>
+    <tbody>`;
+
+  // Linha para cada função que já aparece na grade
+  if(funcoesNaGrade.length === 0) {
+    html += `<tr><td colspan="4" style="text-align:center;color:var(--text3);padding:30px;font-size:13px">
+      Arraste colaboradores da área acima para as células da grade
+    </td></tr>`;
+  } else {
+    funcoesNaGrade.forEach(func => {
+      html += `<tr>
+        <td class="qv-td-func">${func}</td>
+        ${QV_SETORES.map(setor => {
+          const chave = setor + '|' + func;
+          const membros = Object.entries(qvAlocacao)
+            .filter(([,a]) => a.setor===setor && a.funcao===func)
+            .map(([i]) => quadro[parseInt(i)]);
+          return `<td class="qv-td-cell"
+            ondragover="qvDragOver(event)"
+            ondrop="qvDrop(event,'${setor}','${func}')"
+            ondragleave="qvDragLeave(event)">
+            <div class="qv-cell-inner">
+              ${membros.map(m => {
+                const idx = quadro.indexOf(m);
+                const av = avatarColor(m.nome);
+                const ini = initials(m.nome);
+                return `<div class="qv-chip qv-chip-placed" draggable="true"
+                  ondragstart="qvDragStart(event,${idx})"
+                  ondragend="qvDragEnd(event)"
+                  style="border-color:${QV_CORES[setor]}44">
+                  <div class="avatar" style="background:${av}22;color:${av};border:1px solid ${av}44;width:22px;height:22px;font-size:9px;flex-shrink:0">${ini}</div>
+                  <div style="min-width:0;flex:1">
+                    <div style="font-size:11px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.nome.split(' ')[0]} ${m.nome.split(' ')[1]||''}</div>
+                    <div style="font-size:10px;color:var(--green);font-family:monospace">R$${m.salario.toFixed(0)}</div>
+                  </div>
+                  <button onclick="qvRemover(${idx})" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:12px;padding:0 2px;flex-shrink:0" title="Remover">✕</button>
+                </div>`;
+              }).join('')}
+              <div class="qv-drop-hint" style="border-color:${QV_CORES[setor]}44">+ solte aqui</div>
+            </div>
+          </td>`;
+        }).join('')}
+      </tr>`;
+    });
+  }
+
+  // Linha "nova função" — drop zone aberta
+  html += `<tr>
+    <td class="qv-td-func" style="color:var(--text3);font-style:italic;font-size:12px">+ nova função</td>
+    ${QV_SETORES.map(setor => `<td class="qv-td-cell qv-td-new"
+      ondragover="qvDragOver(event)"
+      ondrop="qvDropNovo(event,'${setor}')"
+      ondragleave="qvDragLeave(event)">
+      <div class="qv-drop-hint" style="border-color:${QV_CORES[setor]}44;color:var(--text3)">solte para criar</div>
+    </td>`).join('')}
+  </tr>`;
+
+  html += `</tbody></table></div>`;
+
+  wrap.innerHTML = html;
+}
+
+function contarSetor(setor) {
+  return Object.values(qvAlocacao).filter(a=>a.setor===setor).length;
+}
+function massaSetor(setor) {
+  const total = Object.entries(qvAlocacao)
+    .filter(([,a])=>a.setor===setor)
+    .reduce((s,[i])=>s+quadro[parseInt(i)].salario,0);
+  return total > 0 ? (total/1000).toFixed(1)+'k' : '0';
+}
+
+// ===== DRAG & DROP QUADRO VISUAL =====
+let qvDragIdx = null;
+
+function qvDragStart(e, idx) {
+  qvDragIdx = idx;
+  e.dataTransfer.effectAllowed = 'move';
+  setTimeout(()=>{
+    const el = e.target.closest('.qv-chip');
+    if(el) el.style.opacity = '0.4';
+  },0);
+}
+
+function qvDragEnd(e) {
+  qvDragIdx = null;
+  const el = e.target.closest('.qv-chip');
+  if(el) el.style.opacity = '';
+  document.querySelectorAll('.qv-td-cell').forEach(c=>c.classList.remove('qv-over'));
+}
+
+function qvDragOver(e) {
+  e.preventDefault();
+  e.currentTarget.classList.add('qv-over');
+}
+function qvDragLeave(e) {
+  if(!e.currentTarget.contains(e.relatedTarget))
+    e.currentTarget.classList.remove('qv-over');
+}
+
+function qvDrop(e, setor, funcao) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('qv-over');
+  if(qvDragIdx === null) return;
+  const idx = qvDragIdx;
+  qvDragIdx = null;
+  qvAlocar(idx, setor, funcao);
+}
+
+function qvDropNovo(e, setor) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('qv-over');
+  if(qvDragIdx === null) return;
+  const idx = qvDragIdx;
+  qvDragIdx = null;
+  // Usa a função real do colaborador como nova linha
+  const funcao = normFunc(quadro[idx].funcao);
+  qvAlocar(idx, setor, funcao);
+}
+
+function qvDropOrigem(e) {
+  e.preventDefault();
+  if(qvDragIdx === null) return;
+  qvRemover(qvDragIdx);
+  qvDragIdx = null;
+}
+
+function qvAlocar(idx, setor, funcao) {
+  qvAlocacao[idx] = { setor, funcao };
+  // Atualiza setor real do colaborador também
+  quadro[idx].setor = setor;
+  persistAll();
+  renderQuadroVisual();
+  toast(`${quadro[idx].nome.split(' ')[0]} → ${setor} / ${funcao}`, 'success');
+}
+
+function qvRemover(idx) {
+  delete qvAlocacao[idx];
+  renderQuadroVisual();
+}
+
+// ===== EXPORT EXCEL =====
+function exportQuadroXLSX() {
+  const wb = XLSX.utils.book_new();
+
+  // Aba da grade
+  const funcs = [...new Set(Object.values(qvAlocacao).map(a=>a.funcao))].sort();
+  const cabecalho = ['FUNÇÃO / CARGO', ...QV_SETORES];
+  const rows = [cabecalho];
+  funcs.forEach(func => {
+    const row = [func];
+    QV_SETORES.forEach(setor => {
+      const membros = Object.entries(qvAlocacao)
+        .filter(([,a])=>a.setor===setor&&a.funcao===func)
+        .map(([i])=>quadro[parseInt(i)].nome.split(' ').slice(0,2).join(' '));
+      row.push(membros.join(' / ') || '');
+    });
+    rows.push(row);
+  });
+  // Linha totais
+  const totRow = ['TOTAL'];
+  QV_SETORES.forEach(s => totRow.push(contarSetor(s) + ' pessoa(s)'));
+  rows.push(totRow);
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [{wch:28},{wch:35},{wch:35},{wch:35}];
+  XLSX.utils.book_append_sheet(wb, ws, 'Quadro Visual');
+
+  // Aba detalhada por setor
+  QV_SETORES.forEach(setor => {
+    const membros = Object.entries(qvAlocacao)
+      .filter(([,a])=>a.setor===setor)
+      .map(([i,a])=>({...quadro[parseInt(i)], _func_alocada: a.funcao}));
+    if(!membros.length) return;
+    const sRows = [['NOME','CARGO ALOCADO','CARGO REAL','SALÁRIO (R$)']];
+    membros.forEach(m => sRows.push([m.nome, m._func_alocada, m.funcao, m.salario.toFixed(2)]));
+    sRows.push(['','','TOTAL', membros.reduce((s,m)=>s+m.salario,0).toFixed(2)]);
+    const ws2 = XLSX.utils.aoa_to_sheet(sRows);
+    ws2['!cols'] = [{wch:35},{wch:25},{wch:25},{wch:14}];
+    XLSX.utils.book_append_sheet(wb, ws2, setor);
+  });
+
+  XLSX.writeFile(wb, 'QuadroVisual-Ziran.xlsx');
+  toast('Excel exportado!','success');
+}
+function exportKanbanXLSX() { exportQuadroXLSX(); }
+
+// ===== IMPRESSÃO PDF =====
+function printQuadro() {
+  const funcs = [...new Set(Object.values(qvAlocacao).map(a=>a.funcao))].sort();
+  const hoje = new Date().toLocaleDateString('pt-BR');
+
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <title>Quadro Visual — Ziran Nordeste</title>
+  <style>
+    @page { size: A4 landscape; margin: 12mm; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family: Arial, sans-serif; font-size: 11px; color: #111; }
+    .top { display:flex; justify-content:space-between; align-items:center; border-bottom:3px solid #CC0000; padding-bottom:10px; margin-bottom:14px; }
+    .logo-box { width:32px;height:32px;background:#CC0000;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;border-radius:5px; }
+    table { width:100%; border-collapse:collapse; }
+    th { padding:8px 10px; font-size:11px; font-weight:700; text-align:center; background:#f0f0f0; border:1px solid #ccc; }
+    th.setor-depot { background:#CC0000; color:#fff; }
+    th.setor-arm   { background:#2563EB; color:#fff; }
+    th.setor-transp{ background:#16a34a; color:#fff; }
+    td { border:1px solid #ddd; padding:6px 8px; vertical-align:top; }
+    td.func { background:#f8f8f8; font-weight:700; font-size:11px; min-width:130px; }
+    .chip { background:#fff; border:1px solid #ddd; border-radius:4px; padding:3px 6px; margin:2px 0; font-size:10px; }
+    .chip-nome { font-weight:700; }
+    .chip-sal  { color:#16a34a; }
+    .foot { margin-top:12px; font-size:9px; color:#999; text-align:center; border-top:1px solid #ddd; padding-top:8px; }
+    .kpis { display:flex; gap:10px; margin-bottom:12px; }
+    .kpi { border:1px solid #ddd; border-radius:5px; padding:6px 12px; flex:1; }
+    .kpi-l { font-size:9px; color:#888; }
+    .kpi-v { font-size:16px; font-weight:700; color:#CC0000; }
+  </style></head><body>
+  <div class="top">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="logo-box">ZN</div>
+      <div><div style="font-size:16px;font-weight:700;color:#CC0000">ZIRAN NORDESTE</div>
+      <div style="font-size:10px;color:#666">Porto de Suape — Logística e Operações</div></div>
+    </div>
+    <div style="text-align:right">
+      <div style="font-weight:700;font-size:13px">QUADRO VISUAL DE PESSOAL</div>
+      <div style="font-size:10px;color:#666">Emitido em ${hoje}</div>
+    </div>
+  </div>
+  <div class="kpis">
+    ${QV_SETORES.map(s=>{
+      const n = contarSetor(s);
+      const mass = Object.entries(qvAlocacao).filter(([,a])=>a.setor===s).reduce((t,[i])=>t+quadro[parseInt(i)].salario,0);
+      return `<div class="kpi"><div class="kpi-l">${s}</div><div class="kpi-v">${n} pessoas</div><div class="kpi-l">R$ ${mass.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div></div>`;
+    }).join('')}
+  </div>
+  <table>
+    <thead><tr>
+      <th style="background:#f0f0f0;text-align:left">FUNÇÃO / CARGO</th>
+      <th class="setor-depot">DEPOT</th>
+      <th class="setor-arm">ARMAZEM</th>
+      <th class="setor-transp">TRANSPORTE</th>
+    </tr></thead>
+    <tbody>
+    ${funcs.map(func=>`<tr>
+      <td class="func">${func}</td>
+      ${QV_SETORES.map(setor=>{
+        const membros = Object.entries(qvAlocacao)
+          .filter(([,a])=>a.setor===setor&&a.funcao===func)
+          .map(([i])=>quadro[parseInt(i)]);
+        return `<td>${membros.map(m=>`<div class="chip"><span class="chip-nome">${m.nome.split(' ').slice(0,2).join(' ')}</span> <span class="chip-sal">R$${m.salario.toFixed(0)}</span></div>`).join('')}</td>`;
+      }).join('')}
+    </tr>`).join('')}
+    <tr style="background:#f8f8f8;font-weight:700">
+      <td class="func">TOTAL</td>
+      ${QV_SETORES.map(s=>`<td style="text-align:center">${contarSetor(s)} pessoa(s)</td>`).join('')}
+    </tr>
+    </tbody>
+  </table>
+  <div class="foot">Ziran Nordeste — Porto de Suape, Pernambuco — Gerado em ${hoje}</div>
+  <scr'+'ipt>window.onload=()=>window.print()</scr'+'ipt>
+  </body></html>`;
+
+  const w = window.open('','_blank','width=1000,height=700');
+  w.document.write(html);
+  w.document.close();
+}
+function printKanban() { printQuadro(); }
+
+// =====================================
+// OCORRÊNCIAS (faltas, férias, aumentos, advertências, suspensões)
+// =====================================
+// Cores: paleta categórica validada (contraste e daltonismo) sobre o fundo escuro.
+// A ordem é fixa — cada tipo mantém sempre a mesma cor.
+const OC_TIPOS = [
+  {k:'ferias',      nome:'Férias',              cor:'#3987e5', periodo:true,  subLbl:'Tipo de férias', sub:['Integral (30 dias)','Parcelada','Coletiva']},
+  {k:'falta_inj',   nome:'Falta injustificada', cor:'#d95926', periodo:true,  subLbl:'',              sub:[]},
+  {k:'aumento',     nome:'Aumento',             cor:'#199e70', periodo:false, subLbl:'Motivo do aumento', sub:['Mérito','Dissídio','Promoção','Enquadramento','Outro']},
+  {k:'falta_just',  nome:'Falta justificada',   cor:'#c98500', periodo:true,  subLbl:'Justificativa', sub:['Atestado médico','Declaração de comparecimento','Luto','Casamento','Doação de sangue','Outro']},
+  {k:'advertencia', nome:'Advertência',         cor:'#d55181', periodo:false, subLbl:'Forma',         sub:['Escrita','Verbal']},
+  {k:'suspensao',   nome:'Suspensão',           cor:'#9085e9', periodo:true,  subLbl:'',              sub:[]},
+];
+const OC_MES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const ocT = k => OC_TIPOS.find(t=>t.k===k) || {nome:k,cor:'#6B7280',periodo:false,sub:[]};
+const ocFmtD = iso => iso ? iso.split('-').reverse().join('/') : '';
+const ocR$ = v => 'R$ '+(+v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const ocEsc = s => String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function ocNomeDe(o){ const q=quadro.find(x=>x.uid===o.uid); return q?q.nome:(o.nome||'—'); }
+function ocDiasEntre(a,b){
+  if(!a) return 0; if(!b||b<a) return 1;
+  return Math.round((new Date(b+'T12:00')-new Date(a+'T12:00'))/864e5)+1;
+}
+function ocQuem(){
+  try{ if(typeof nuvemAuth!=='undefined' && nuvemAuth && nuvemAuth.currentUser) return nuvemAuth.currentUser.email; }catch(e){}
+  return '';
+}
+
+/* ── Filtros ── */
+function ocPreencherFiltros(){
+  const selA=document.getElementById('oc-f-ano'), selC=document.getElementById('oc-f-colab'), selT=document.getElementById('oc-f-tipo');
+  const va=selA.value, vc=selC.value, vt=selT.value;
+  const anoAtual=String(new Date().getFullYear());
+  const anos=[...new Set([anoAtual,...ocorrencias.map(o=>(o.inicio||'').slice(0,4)).filter(Boolean)])].sort().reverse();
+  selA.innerHTML=anos.map(a=>`<option value="${a}">${a}</option>`).join('')+'<option value="todos">Todos os anos</option>';
+  selA.value = va && [...selA.options].some(o=>o.value===va) ? va : anoAtual;
+  const lista=[...quadro].sort((a,b)=>(a.status===b.status?0:a.status==='ATUAL'?-1:1)||a.nome.localeCompare(b.nome));
+  selC.innerHTML='<option value="">Todos os colaboradores</option>'+lista.map(q=>`<option value="${q.uid}">${ocEsc(q.nome)}${q.status!=='ATUAL'?' (desligado)':''}</option>`).join('');
+  selC.value=vc||'';
+  selT.innerHTML='<option value="">Todos os tipos</option>'+OC_TIPOS.map(t=>`<option value="${t.k}">${t.nome}</option>`).join('');
+  selT.value=vt||'';
+}
+function ocFiltradas(ignorarTipo){
+  const ano=document.getElementById('oc-f-ano').value, c=document.getElementById('oc-f-colab').value, t=document.getElementById('oc-f-tipo').value;
+  return ocorrencias.filter(o=>(ano==='todos'||(o.inicio||'').startsWith(ano)) && (!c||o.uid===c) && (ignorarTipo||!t||o.tipo===t));
+}
+
+/* ── Render principal ── */
+function renderOcorrencias(){
+  if(!document.getElementById('page-ocorrencias')) return;
+  ocPreencherFiltros();
+  const F=ocFiltradas(false), Fall=ocFiltradas(true);
+  const ano=document.getElementById('oc-f-ano').value;
+  const tipoSel=document.getElementById('oc-f-tipo').value;
+  const tiposVis=tipoSel?OC_TIPOS.filter(t=>t.k===tipoSel):OC_TIPOS;
+
+  // KPIs (sempre os 6 tipos, respeitando ano/colaborador)
+  document.getElementById('oc-kpis').innerHTML=OC_TIPOS.map(t=>{
+    const L=Fall.filter(o=>o.tipo===t.k);
+    let sub='';
+    if(t.periodo){ const d=L.reduce((s,o)=>s+(+o.dias||0),0); sub=d+' dia'+(d===1?'':'s'); }
+    else if(t.k==='aumento'){ const p=L.filter(o=>o.salAnt>0&&o.salNovo>0).map(o=>(o.salNovo/o.salAnt-1)*100); sub=p.length?('média +'+(p.reduce((a,b)=>a+b,0)/p.length).toFixed(1).replace('.',',')+'%'):'—'; }
+    else if(t.k==='advertencia'){ const e=L.filter(o=>o.sub==='Escrita').length; sub=e+' escrita'+(e===1?'':'s')+' · '+(L.length-e)+' verba'+((L.length-e)===1?'l':'is'); }
+    return `<div class="oc-kpi" style="--c:${t.cor};cursor:pointer" onclick="document.getElementById('oc-f-tipo').value='${tipoSel===t.k?'':t.k}';renderOcorrencias()" title="Filtrar por ${t.nome}">
+      <div class="oc-kpi-l"><span class="oc-sw"></span>${t.nome}</div>
+      <div class="oc-kpi-v">${L.length}</div><div class="oc-kpi-s">${sub}</div></div>`;
+  }).join('');
+
+  // Legenda (≥2 séries)
+  document.getElementById('oc-leg').innerHTML = tiposVis.length>1
+    ? tiposVis.map(t=>`<span><i class="oc-sw" style="--c:${t.cor}"></i>${t.nome}</span>`).join('') : '';
+  document.getElementById('oc-mes-sub').textContent = ano==='todos' ? 'Todos os anos, somados por mês do calendário' : 'Ano de '+ano+' · pela data de início';
+  document.getElementById('oc-tipo-sub').textContent = F.length+' registro'+(F.length===1?'':'s')+' no filtro';
+  ocChartMes(F,tiposVis);
+  ocChartTipo(Fall);
+  ocRanking(Fall);
+  ocLista(F);
+}
+
+/* ── Gráfico: colunas empilhadas por mês ── */
+function ocChartMes(F,tiposVis){
+  const W=720,H=250,ml=34,mr=10,mt=18,mb=26, pw=W-ml-mr, ph=H-mt-mb;
+  const M=OC_MES.map((_,i)=>{ const r={}; tiposVis.forEach(t=>r[t.k]=F.filter(o=>o.tipo===t.k&&+((o.inicio||'').slice(5,7))===i+1).length); return r; });
+  const tot=M.map(r=>Object.values(r).reduce((a,b)=>a+b,0));
+  const max=Math.max(1,...tot);
+  const passo=max<=5?1:max<=10?2:max<=25?5:Math.ceil(max/5/5)*5;
+  const topo=Math.ceil(max/passo)*passo;
+  const y=v=>mt+ph-(v/topo)*ph;
+  const band=pw/12, bw=Math.min(34,band*0.56);
+  let g='';
+  for(let v=0; v<=topo; v+=passo){
+    g+=`<line x1="${ml}" x2="${W-mr}" y1="${y(v)}" y2="${y(v)}" stroke="${v===0?'#444':'#2a2a2a'}" stroke-width="1"/>`;
+    g+=`<text x="${ml-6}" y="${y(v)+4}" text-anchor="end" font-size="10" fill="#8a8a8a">${v}</text>`;
+  }
+  M.forEach((r,i)=>{
+    const x=ml+band*i+(band-bw)/2;
+    let base=0; const segs=tiposVis.filter(t=>r[t.k]>0);
+    segs.forEach((t,j)=>{
+      const v=r[t.k], y0=y(base), y1=y(base+v); let h=y0-y1;
+      const gap=j>0?2:0; h=Math.max(1,h-gap);
+      const top=y1, ultimo=j===segs.length-1;
+      const rad=ultimo?Math.min(4,h,bw/2):0;
+      const d=`M${x},${top+h} L${x},${top+rad} Q${x},${top} ${x+rad},${top} L${x+bw-rad},${top} Q${x+bw},${top} ${x+bw},${top+rad} L${x+bw},${top+h} Z`;
+      g+=`<path d="${d}" fill="${t.cor}"/>`;
+      base+=v;
+    });
+    if(tot[i]>0) g+=`<text x="${x+bw/2}" y="${y(tot[i])-5}" text-anchor="middle" font-size="10" font-weight="700" fill="#F0F0F0">${tot[i]}</text>`;
+    g+=`<text x="${ml+band*i+band/2}" y="${H-8}" text-anchor="middle" font-size="10" fill="#8a8a8a">${OC_MES[i]}</text>`;
+    // alvo de hover = coluna inteira (maior que a marca)
+    g+=`<rect x="${ml+band*i}" y="${mt}" width="${band}" height="${ph}" fill="transparent" data-m="${i}" class="oc-hit"/>`;
+  });
+  const el=document.getElementById('oc-chart-mes');
+  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Ocorrências por mês">${g}</svg>`;
+  el.querySelectorAll('.oc-hit').forEach(h=>{
+    h.addEventListener('mousemove',ev=>{
+      const i=+h.dataset.m, r=M[i];
+      ocTip(ev, `<div class="t">${OC_MES[i]} · ${tot[i]} ocorrência${tot[i]===1?'':'s'}</div>`+
+        tiposVis.filter(t=>r[t.k]>0).map(t=>`<div class="r"><i class="oc-sw" style="--c:${t.cor}"></i>${t.nome}<b>${r[t.k]}</b></div>`).join('')
+        || '<div class="r">Nenhuma</div>');
+      h.setAttribute('fill','rgba(255,255,255,.04)');
+    });
+    h.addEventListener('mouseleave',()=>{ ocTip(null); h.setAttribute('fill','transparent'); });
+  });
+}
+
+/* ── Gráfico: barras horizontais por tipo ── */
+function ocChartTipo(Fall){
+  const dados=OC_TIPOS.map(t=>({t,v:Fall.filter(o=>o.tipo===t.k).length}));
+  const max=Math.max(1,...dados.map(d=>d.v));
+  const W=340,rowH=34,H=dados.length*rowH+6,ml=120,mr=34,pw=W-ml-mr;
+  let g='';
+  dados.forEach((d,i)=>{
+    const yy=6+i*rowH, bh=14, w=d.v?Math.max(4,(d.v/max)*pw):0;
+    g+=`<text x="${ml-8}" y="${yy+bh/2+4}" text-anchor="end" font-size="11" fill="#A0A0A0">${d.t.nome}</text>`;
+    g+=`<line x1="${ml}" x2="${ml}" y1="${yy-6}" y2="${yy+bh+6}" stroke="#444"/>`;
+    if(w){ const r=Math.min(4,w);
+      g+=`<path d="M${ml},${yy} L${ml+w-r},${yy} Q${ml+w},${yy} ${ml+w},${yy+r} L${ml+w},${yy+bh-r} Q${ml+w},${yy+bh} ${ml+w-r},${yy+bh} L${ml},${yy+bh} Z" fill="${d.t.cor}"/>`; }
+    g+=`<text x="${ml+w+6}" y="${yy+bh/2+4}" font-size="11" font-weight="700" fill="#F0F0F0">${d.v}</text>`;
+    g+=`<rect x="0" y="${yy-8}" width="${W}" height="${rowH}" fill="transparent" class="oc-hit2" data-i="${i}"/>`;
+  });
+  const el=document.getElementById('oc-chart-tipo');
+  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Total por tipo">${g}</svg>`;
+  el.querySelectorAll('.oc-hit2').forEach(h=>{
+    h.addEventListener('mousemove',ev=>{ const d=dados[+h.dataset.i];
+      const col=new Set(Fall.filter(o=>o.tipo===d.t.k).map(o=>o.uid)).size;
+      ocTip(ev,`<div class="t"><i class="oc-sw" style="--c:${d.t.cor}"></i> ${d.t.nome}</div><div class="r">Registros<b>${d.v}</b></div><div class="r">Colaboradores<b>${col}</b></div>`); });
+    h.addEventListener('mouseleave',()=>ocTip(null));
+  });
+}
+function ocTip(ev,html){
+  const t=document.getElementById('oc-tip'); if(!t) return;
+  if(!ev){ t.style.display='none'; return; }
+  t.innerHTML=html; t.style.display='block';
+  const w=t.offsetWidth, hgt=t.offsetHeight;
+  let x=ev.clientX+14, y=ev.clientY+14;
+  if(x+w>innerWidth-8) x=ev.clientX-w-14;
+  if(y+hgt>innerHeight-8) y=ev.clientY-hgt-14;
+  t.style.left=x+'px'; t.style.top=y+'px';
+}
+
+/* ── Tabela por colaborador ── */
+function ocRanking(Fall){
+  const por={};
+  Fall.forEach(o=>{ (por[o.uid]=por[o.uid]||{uid:o.uid,nome:ocNomeDe(o),tot:0})[o.tipo]=(por[o.uid][o.tipo]||0)+1; por[o.uid].tot++; });
+  const L=Object.values(por).sort((a,b)=>b.tot-a.tot||a.nome.localeCompare(b.nome));
+  const tb=document.getElementById('oc-rank');
+  if(!L.length){ tb.innerHTML='<tr><td style="text-align:center;color:var(--text3);padding:20px">Nenhuma ocorrência no período</td></tr>'; return; }
+  tb.innerHTML='<tr><th>Colaborador</th>'+OC_TIPOS.map(t=>`<th style="text-align:center"><span class="oc-badge" style="color:var(--text2)"><i class="oc-sw" style="--c:${t.cor}"></i>${t.nome}</span></th>`).join('')+'<th style="text-align:center">Total</th></tr>'+
+    L.map(r=>`<tr style="cursor:pointer" onclick="document.getElementById('oc-f-colab').value='${r.uid}';renderOcorrencias()"><td style="font-weight:600">${ocEsc(r.nome)}</td>`+
+      OC_TIPOS.map(t=>`<td class="n" style="color:${r[t.k]?'var(--text)':'var(--text3)'}">${r[t.k]||'–'}</td>`).join('')+`<td class="n" style="font-weight:800">${r.tot}</td></tr>`).join('');
+}
+
+/* ── Lista de registros ── */
+function ocLista(F){
+  const L=[...F].sort((a,b)=>(b.inicio||'').localeCompare(a.inicio||'')||(b.em||'').localeCompare(a.em||''));
+  document.getElementById('oc-reg-sub').textContent=L.length+' registro'+(L.length===1?'':'s')+' · clique numa linha da tabela acima para ver um colaborador';
+  const tb=document.getElementById('oc-lista');
+  if(!L.length){ tb.innerHTML='<tr><td style="text-align:center;color:var(--text3);padding:24px">Nenhum registro. Clique em "+ Registrar ocorrência".</td></tr>'; return; }
+  tb.innerHTML='<tr><th>Data</th><th>Colaborador</th><th>Tipo</th><th>Detalhe</th><th>Observação</th><th>Registrado por</th><th></th></tr>'+
+    L.map(o=>{ const t=ocT(o.tipo);
+      let det=o.sub?ocEsc(o.sub):'';
+      if(t.periodo) det+=(det?' · ':'')+(o.dias||1)+' dia'+((o.dias||1)===1?'':'s')+(o.fim&&o.fim!==o.inicio?' (até '+ocFmtD(o.fim)+')':'');
+      if(o.tipo==='aumento'&&o.salNovo){ const p=o.salAnt>0?((o.salNovo/o.salAnt-1)*100).toFixed(1).replace('.',','):null;
+        det+=(det?' · ':'')+ocR$(o.salAnt)+' → '+ocR$(o.salNovo)+(p?' (+'+p+'%)':''); }
+      return `<tr><td style="white-space:nowrap">${ocFmtD(o.inicio)}</td><td style="font-weight:600">${ocEsc(ocNomeDe(o))}</td>
+        <td><span class="oc-badge"><i class="oc-sw" style="--c:${t.cor}"></i>${t.nome}</span></td>
+        <td class="oc-det">${det}</td><td class="oc-det">${ocEsc(o.obs)}</td><td class="oc-det">${ocEsc((o.por||'').split('@')[0])}</td>
+        <td style="white-space:nowrap"><button class="btn btn-ghost" style="padding:3px 9px;font-size:12px" onclick="ocAbrir('${o.id}')">✎</button>
+        <button class="btn btn-ghost" style="padding:3px 9px;font-size:12px;color:#f87171" onclick="ocExcluir('${o.id}')">✕</button></td></tr>`;
+    }).join('');
+}
+
+/* ── Modal ── */
+function ocAbrir(id){
+  const o=id?ocorrencias.find(x=>x.id===id):null;
+  document.getElementById('oc-m-titulo').textContent=o?'Editar ocorrência':'Registrar ocorrência';
+  document.getElementById('oc-id').value=o?o.id:'';
+  const lista=[...quadro].filter(q=>q.status==='ATUAL'||(o&&q.uid===o.uid)).sort((a,b)=>a.nome.localeCompare(b.nome));
+  const cs=document.getElementById('oc-colab');
+  cs.innerHTML='<option value="">— Selecione —</option>'+lista.map(q=>`<option value="${q.uid}">${ocEsc(q.nome)}</option>`).join('');
+  const fc=document.getElementById('oc-f-colab').value;
+  cs.value=o?o.uid:(fc||'');
+  const ts=document.getElementById('oc-tipo');
+  ts.innerHTML=OC_TIPOS.map(t=>`<option value="${t.k}">${t.nome}</option>`).join('');
+  ts.value=o?o.tipo:(document.getElementById('oc-f-tipo').value||'falta_inj');
+  ts.disabled=!!(o&&o.tipo==='aumento'&&o.aplicado);
+  document.getElementById('oc-ini').value=o?o.inicio:new Date().toISOString().slice(0,10);
+  document.getElementById('oc-fim').value=o?(o.fim||''):'';
+  document.getElementById('oc-obs').value=o?(o.obs||''):'';
+  document.getElementById('oc-sal-novo').value=o&&o.salNovo?o.salNovo:'';
+  document.getElementById('oc-aplicar').checked=o?!!o.aplicado:true;
+  document.getElementById('oc-aplicar').disabled=!!o;
+  ocTipoChange(o?o.sub:null);
+  if(o&&o.salAnt) document.getElementById('oc-sal-ant').value=o.salAnt; else ocColabChange();
+  ocCalcDias(); ocCalcPct();
+  document.getElementById('modal-oc').classList.add('open');
+}
+function ocTipoChange(subSel){
+  const t=ocT(document.getElementById('oc-tipo').value);
+  const sw=document.getElementById('oc-sub-wrap'), ss=document.getElementById('oc-sub');
+  sw.style.display=t.sub.length?'':'none';
+  document.getElementById('oc-sub-lbl').textContent=t.subLbl||'Motivo';
+  ss.innerHTML=t.sub.map(s=>`<option>${s}</option>`).join('');
+  if(subSel && t.sub.includes(subSel)) ss.value=subSel;
+  document.getElementById('oc-fim-wrap').style.display=t.periodo?'':'none';
+  document.getElementById('oc-ini-lbl').textContent=t.periodo?'De':(t.k==='aumento'?'Vigência a partir de':'Data');
+  document.getElementById('oc-aum-wrap').style.display=t.k==='aumento'?'':'none';
+  ocCalcDias();
+}
+function ocColabChange(){
+  const q=quadro.find(x=>x.uid===document.getElementById('oc-colab').value);
+  document.getElementById('oc-sal-ant').value=q?q.salario:'';
+  ocCalcPct();
+}
+function ocCalcDias(){
+  const t=ocT(document.getElementById('oc-tipo').value), el=document.getElementById('oc-dias');
+  if(!t.periodo){ el.textContent=''; return; }
+  const d=ocDiasEntre(document.getElementById('oc-ini').value,document.getElementById('oc-fim').value);
+  el.textContent=d?('= '+d+' dia'+(d===1?'':'s')+' corrido'+(d===1?'':'s')):'';
+}
+function ocCalcPct(){
+  const a=+document.getElementById('oc-sal-ant').value, n=+document.getElementById('oc-sal-novo').value, el=document.getElementById('oc-pct');
+  if(a>0&&n>0){ const p=(n/a-1)*100; el.textContent=(p>=0?'+':'')+p.toFixed(2).replace('.',',')+'%  ('+(n-a>=0?'+':'')+ocR$(n-a).replace('R$ ','R$ ')+')'; el.style.color=p>=0?'var(--green)':'#f87171'; }
+  else el.textContent='';
+}
+function ocSalvar(){
+  const id=document.getElementById('oc-id').value;
+  const uid=document.getElementById('oc-colab').value;
+  const tipo=document.getElementById('oc-tipo').value;
+  const t=ocT(tipo);
+  const inicio=document.getElementById('oc-ini').value;
+  let fim=t.periodo?document.getElementById('oc-fim').value:'';
+  if(!uid){ toast('Selecione o colaborador.','error'); return; }
+  if(!inicio){ toast('Informe a data.','error'); return; }
+  if(fim && fim<inicio){ toast('A data final é anterior à inicial.','error'); return; }
+  if(!fim) fim=t.periodo?inicio:'';
+  const q=quadro.find(x=>x.uid===uid);
+  const o={
+    id: id||('o'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)),
+    uid, nome:q?q.nome:'', tipo, sub:t.sub.length?document.getElementById('oc-sub').value:'',
+    inicio, fim, dias:t.periodo?ocDiasEntre(inicio,fim):0,
+    obs:document.getElementById('oc-obs').value.trim(),
+    salAnt:0, salNovo:0, aplicado:false,
+    por:ocQuem(), em:new Date().toISOString()
+  };
+  if(tipo==='aumento'){
+    o.salAnt=+document.getElementById('oc-sal-ant').value||0;
+    o.salNovo=+document.getElementById('oc-sal-novo').value||0;
+    if(!(o.salNovo>0)){ toast('Informe o novo salário.','error'); return; }
+  }
+  const antigo=id?ocorrencias.find(x=>x.id===id):null;
+  if(antigo){
+    o.por=antigo.por||o.por; o.em=antigo.em; o.aplicado=antigo.aplicado;
+    Object.assign(antigo,o);
+  } else {
+    ocorrencias.push(o);
+    if(q){
+      q.historico=q.historico||[];
+      let desc=t.nome+(o.sub?' ('+o.sub+')':'');
+      if(t.periodo) desc+=' · '+o.dias+' dia'+(o.dias===1?'':'s');
+      if(tipo==='aumento'){
+        desc+=': R$'+o.salAnt.toFixed(2)+' → R$'+o.salNovo.toFixed(2);
+        if(document.getElementById('oc-aplicar').checked){ q.salario=o.salNovo; o.aplicado=true; }
+      }
+      q.historico.push({desc,data:ocFmtD(inicio)});
+    }
+  }
+  persistAll();
+  closeModal('modal-oc');
+  renderOcorrencias();
+  toast(antigo?'Ocorrência atualizada':(t.nome+' registrada'+(o.aplicado?' · salário atualizado':'')),'success');
+}
+function ocExcluir(id){
+  const o=ocorrencias.find(x=>x.id===id); if(!o) return;
+  const aviso=o.tipo==='aumento'&&o.aplicado?'\n\nAtenção: o salário no cadastro NÃO volta automaticamente.':'';
+  if(!confirm('Excluir '+ocT(o.tipo).nome+' de '+ocNomeDe(o)+' ('+ocFmtD(o.inicio)+')?'+aviso)) return;
+  ocorrencias=ocorrencias.filter(x=>x.id!==id);
+  persistAll(); renderOcorrencias(); toast('Ocorrência excluída','success');
+}
+function ocCSV(){
+  const F=ocFiltradas(false);
+  const rows=[['Data','Até','Dias','Colaborador','Tipo','Detalhe','Salário anterior','Novo salário','Observação','Registrado por']];
+  F.forEach(o=>rows.push([ocFmtD(o.inicio),ocFmtD(o.fim),o.dias||'',ocNomeDe(o),ocT(o.tipo).nome,o.sub||'',o.salAnt||'',o.salNovo||'',o.obs||'',o.por||'']));
+  const csv='﻿'+rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(';')).join('\n');
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download='ocorrencias-rh-'+new Date().toISOString().slice(0,10)+'.csv'; a.click();
+}
+
+// BACKUP COMPLETO (JSON) — quadro, organograma, níveis, horários, programações, cores
+function backupBaixar(){
+  if(!ON.length){ if(!orgLoad()) orgDefaultNodes(); }
+  const dados={tipo:'ziran-rh-backup',versao:1,geradoEm:new Date().toISOString(),
+    quadro,horarios,programacoes,ocorrencias,org:ON,cores:SETOR_CORES_USER};
+  const blob=new Blob([JSON.stringify(dados,null,1)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='backup-rh-ziran-'+new Date().toISOString().slice(0,10)+'.json'; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+  toast('Backup baixado. Guarde em local seguro — contém salários.','success');
+}
+function backupRestaurar(ev){
+  const f=ev.target.files[0]; ev.target.value=''; if(!f) return;
+  backupRestaurarArquivo(f);
+}
+function backupRestaurarArquivo(f){
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const d=JSON.parse(r.result);
+      if(d.tipo!=='ziran-rh-backup'||!Array.isArray(d.quadro)) throw new Error('arquivo não é um backup do RH Ziran');
+      if(!confirm('Restaurar o backup de '+(d.geradoEm||'').slice(0,10)+' ('+d.quadro.length+' colaboradores)? Os dados atuais serão substituídos.')) return;
+      quadro=d.quadro; if(d.horarios) horarios=d.horarios; programacoes=d.programacoes||[]; ocorrencias=d.ocorrencias||[];
+      ON=d.org||[]; _oid=ON.length?Math.max(...ON.map(n=>+n.id||0))+1:1;
+      SETOR_CORES_USER=d.cores||{};
+      garantirIds(); garantirNiveis();
+      salvarCoresSetor(); orgSave(); persistAll();
+      renderImportInfo();
+      toast('Backup restaurado: '+quadro.length+' colaboradores','success');
+    }catch(e){ toast('Não foi possível restaurar: '+e.message,'error'); }
+  };
+  r.readAsText(f);
+}
+
+// INIT
+// =====================================
+const _restaurado = loadPersisted();
+garantirIds();
+garantirNiveis();
+renderQuadro();
+renderImportInfo();
+document.getElementById('last-update').textContent = _restaurado
+  ? 'Dados restaurados (salvos no navegador)'
+  : 'Dados carregados: ORGANOGRAMA.xlsx';
+</script>
+<!-- ===================== NUVEM (FIREBASE) ===================== -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<style>
+  #login-gate{position:fixed;inset:0;z-index:5000;background:radial-gradient(ellipse at top,#2a0000 0%,#0F0F0F 60%);display:flex;align-items:center;justify-content:center;padding:16px}
+  #login-gate.hide{display:none}
+  .lg-card{width:100%;max-width:380px;background:#1A1A1A;border:1px solid #333;border-top:4px solid #CC0000;border-radius:14px;padding:28px 26px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+  .lg-logo{display:flex;align-items:center;gap:12px;margin-bottom:22px}
+  .lg-logo .ic{width:44px;height:44px;border-radius:10px;background:#CC0000;color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:16px}
+  .lg-logo .t1{font-weight:800;font-size:16px;color:#fff;letter-spacing:.04em}
+  .lg-logo .t2{font-size:11px;color:#F59E0B}
+  .lg-card label{display:block;font-size:11px;font-weight:600;color:#aaa;margin:12px 0 5px}
+  .lg-card input{width:100%;box-sizing:border-box;background:#111;border:1px solid #333;border-radius:8px;padding:11px 12px;color:#fff;font-size:14px;outline:none}
+  .lg-card input:focus{border-color:#CC0000}
+  .lg-btn{width:100%;margin-top:18px;background:#CC0000;color:#fff;border:none;border-radius:8px;padding:12px;font-weight:700;font-size:14px;cursor:pointer}
+  .lg-btn:disabled{opacity:.6;cursor:wait}
+  .lg-link{background:none;border:none;color:#F59E0B;font-size:12px;cursor:pointer;margin-top:12px;padding:0}
+  .lg-msg{min-height:18px;margin-top:12px;font-size:12px;color:#f87171}
+  .lg-msg.ok{color:#22C55E}
+  #nuvem-status{font-size:11px;padding:3px 10px;border-radius:20px;border:1px solid #333;background:#222;color:#aaa;margin-left:8px;white-space:nowrap}
+  #nuvem-status.ok{color:#22C55E;border-color:#22C55E44}
+  #nuvem-status.sync{color:#F59E0B;border-color:#F59E0B44}
+  #nuvem-status.err{color:#f87171;border-color:#f8717144}
+  #nuvem-user{font-size:11px;color:#888;margin-left:8px;white-space:nowrap}
+  #nuvem-sair{font-size:11px;background:none;border:1px solid #333;color:#aaa;border-radius:6px;padding:3px 9px;cursor:pointer;margin-left:6px}
+</style>
+
+<div id="login-gate" class="hide">
+  <div class="lg-card">
+    <div class="lg-logo"><div class="ic">ZN</div><div><div class="t1">ZIRAN NORDESTE</div><div class="t2">RH &amp; Pessoal · acesso restrito</div></div></div>
+    <form onsubmit="nuvemEntrar(event)">
+      <label>E-mail</label><input id="lg-email" type="email" autocomplete="username" required>
+      <label>Senha</label><input id="lg-senha" type="password" autocomplete="current-password" required>
+      <button class="lg-btn" id="lg-btn" type="submit">Entrar</button>
+    </form>
+    <button class="lg-link" onclick="nuvemEsqueci()">Esqueci minha senha</button>
+    <div class="lg-msg" id="lg-msg"></div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   CONFIGURAÇÃO DO FIREBASE
+   Cole aqui o config do projeto (Console Firebase →
+   Configurações do projeto → Seus apps → Web → firebaseConfig).
+   Enquanto estiver com "COLE_AQUI", o sistema roda em MODO LOCAL.
+   ========================================================= */
+const FIREBASE_CONFIG = {
+  apiKey:            "AIzaSyDibmCKtLrrw7T1nbfxChqE30EEzFsIMiE",
+  authDomain:        "ziran-rh.firebaseapp.com",
+  projectId:         "ziran-rh",
+  storageBucket:     "ziran-rh.firebasestorage.app",
+  messagingSenderId: "166903798075",
+  appId:             "1:166903798075:web:3024b0a3640b16ab12bf1e"
+};
+
+const NUVEM_DOC = 'rh/dados';          // documento único com todos os dados do RH
+const NUVEM_ATIVA = !String(FIREBASE_CONFIG.apiKey).includes('COLE_AQUI') && typeof firebase!=='undefined';
+const CLIENT_ID = 'k'+Math.random().toString(36).slice(2,10);
+let nuvemDb=null, nuvemAuth=null, nuvemUnsub=null, nuvemTimer=null, nuvemRev=0, nuvemPronto=false, nuvemPendente=null;
+
+function nuvemStatus(txt,cls){
+  let el=document.getElementById('nuvem-status');
+  if(!el){
+    const h=document.querySelector('.header');
+    el=document.createElement('span'); el.id='nuvem-status'; h.appendChild(el);
+  }
+  el.textContent=txt; el.className=cls||'';
+}
+
+/* ── Estado completo ── */
+function nuvemEstado(){
+  return JSON.parse(JSON.stringify({quadro,horarios,programacoes,ocorrencias,org:ON,cores:SETOR_CORES_USER}));
+}
+function nuvemAplicar(d){
+  // não atrapalha quem está arrastando/editando: aplica depois
+  const editando = (typeof oDrag!=='undefined' && oDrag!==null)
+    || document.querySelector('.overlay.open')
+    || (document.getElementById('org-modal')||{}).style?.display==='flex';
+  if(editando){ nuvemPendente=d; return; }
+  nuvemPendente=null;
+  nuvemRev = d.rev||0;   // só assume a versão do servidor quando os dados dela estão na tela
+  quadro = d.quadro||[];
+  if(d.horarios && d.horarios.length) horarios=d.horarios;
+  programacoes = d.programacoes||[];
+  ocorrencias = d.ocorrencias||[];
+  ON = d.org||[];
+  _oid = ON.length ? Math.max(...ON.map(n=>+n.id||0))+1 : 1;
+  SETOR_CORES_USER = d.cores||{};
+  nuvemRerender();
+}
+setInterval(()=>{ if(nuvemPendente) nuvemAplicar(nuvemPendente); },1500);
+
+function nuvemRerender(){
+  const pg=(document.querySelector('.page.active')||{}).id||'';
+  try{
+    if(pg==='page-quadro') renderQuadro();
+    else if(pg==='page-organograma') renderOrg();
+    else if(pg==='page-setores') renderSetores();
+    else if(pg==='page-horarios') renderHorarios();
+    else if(pg==='page-programacoes') renderProgramacoes();
+    else if(pg==='page-ocorrencias') renderOcorrencias();
+    else if(pg==='page-kanban') renderKanban();
+    else if(pg==='page-importar') renderImportInfo();
+  }catch(e){ console.warn(e); }
+}
+
+/* ── Salvar (com atraso curto para juntar várias mudanças) ── */
+function nuvemAgendar(){
+  if(!NUVEM_ATIVA || !nuvemPronto) return;
+  clearTimeout(nuvemTimer);
+  nuvemStatus('● Salvando…','sync');
+  nuvemTimer=setTimeout(nuvemSalvar,700);
+}
+async function nuvemSalvar(){
+  try{
+    const u=nuvemAuth.currentUser;
+    const ref=nuvemDb.doc(NUVEM_DOC);
+    let payload=null, conflito=null;
+    await nuvemDb.runTransaction(async tx=>{
+      const cur=await tx.get(ref);
+      const rvServidor=cur.exists?(cur.data().rev||0):0;
+      if(rvServidor!==nuvemRev){ conflito=cur.data(); return; }   // alguém salvou antes
+      payload=Object.assign(nuvemEstado(),{
+        rev:rvServidor+1, cliente:CLIENT_ID,
+        atualizadoPor:u?u.email:'', atualizadoEm:firebase.firestore.FieldValue.serverTimestamp()
+      });
+      tx.set(ref,payload);
+    });
+    if(conflito){
+      nuvemPendente=null; nuvemAplicar(conflito);
+      nuvemStatus('☁ Sincronizado','ok');
+      toast('Outra pessoa salvou ao mesmo tempo. Os dados foram atualizados — refaça sua última alteração.','error');
+      return;
+    }
+    nuvemRev=payload.rev;
+    // backup diário (1 documento por dia, guarda o último estado do dia)
+    const dia=new Date().toISOString().slice(0,10);
+    nuvemDb.collection('rh_backup').doc(dia).set(payload).catch(()=>{});
+    nuvemStatus('☁ Salvo','ok');
+  }catch(e){
+    console.error(e);
+    nuvemStatus('⚠ Erro ao salvar','err');
+    toast('Erro ao salvar na nuvem: '+(e.code||e.message),'error');
+  }
+}
+
+/* ── Liga os salvamentos existentes à nuvem ── */
+(function(){
+  // versão online: tudo vai direto para a nuvem (nada fica gravado no navegador)
+  persistAll=function(){ nuvemAgendar(); };
+  orgSave=function(){ nuvemAgendar(); };
+  salvarCoresSetor=function(){ nuvemAgendar(); };
+  orgLoad=function(){ return false; };
+})();
+
+/* ── Escuta em tempo real ── */
+function nuvemEscutar(){
+  if(nuvemUnsub) nuvemUnsub();
+  nuvemStatus('● Conectando…','sync');
+  nuvemUnsub = nuvemDb.doc(NUVEM_DOC).onSnapshot(async snap=>{
+    if(snap.metadata.hasPendingWrites || snap.metadata.fromCache) return;
+    if(!snap.exists){
+      // banco ainda vazio: libera para importar o backup
+      nuvemPronto=true; nuvemRev=0;
+      nuvemStatus('☁ Banco vazio — importe o backup','sync');
+      return;
+    }
+    const d=snap.data();
+    const primeira=!nuvemPronto;
+    nuvemPronto=true;
+    if(d.cliente===CLIENT_ID && !primeira){ nuvemRev=d.rev||0; nuvemStatus('☁ Salvo','ok'); return; }
+    nuvemAplicar(d);
+    const quem=d.atualizadoPor||'';
+    nuvemStatus('☁ Sincronizado','ok');
+    if(!primeira && quem) toast('Atualizado por '+quem.split('@')[0],'success');
+    const lu=document.getElementById('last-update');
+    if(lu && d.atualizadoEm && d.atualizadoEm.toDate) lu.textContent='Última alteração: '+d.atualizadoEm.toDate().toLocaleString('pt-BR')+(quem?' · '+quem.split('@')[0]:'');
+  }, err=>{
+    console.error(err);
+    if(err.code==='permission-denied'){
+      nuvemStatus('⛔ Sem acesso','err');
+      document.getElementById('login-gate').classList.remove('hide');
+      document.getElementById('lg-msg').textContent='Seu e-mail não tem acesso ao RH. Peça liberação ao administrador.';
+      nuvemAuth.signOut();
+    } else nuvemStatus('⚠ Offline','err');
+  });
+}
+
+/* ── Login ── */
+async function nuvemEntrar(ev){
+  ev.preventDefault();
+  const msg=document.getElementById('lg-msg'), btn=document.getElementById('lg-btn');
+  msg.className='lg-msg'; msg.textContent=''; btn.disabled=true; btn.textContent='Entrando…';
+  try{
+    await nuvemAuth.signInWithEmailAndPassword(document.getElementById('lg-email').value.trim(),document.getElementById('lg-senha').value);
+  }catch(e){
+    const m={'auth/invalid-credential':'E-mail ou senha incorretos.','auth/wrong-password':'E-mail ou senha incorretos.','auth/user-not-found':'E-mail ou senha incorretos.','auth/too-many-requests':'Muitas tentativas. Aguarde alguns minutos.','auth/network-request-failed':'Sem internet.'};
+    msg.textContent=m[e.code]||('Erro: '+e.code);
+  }
+  btn.disabled=false; btn.textContent='Entrar';
+}
+async function nuvemEsqueci(){
+  const email=document.getElementById('lg-email').value.trim(), msg=document.getElementById('lg-msg');
+  if(!email){ msg.className='lg-msg'; msg.textContent='Digite seu e-mail acima e clique de novo.'; return; }
+  try{ await nuvemAuth.sendPasswordResetEmail(email); msg.className='lg-msg ok'; msg.textContent='Enviamos um link de redefinição para '+email+'.'; }
+  catch(e){ msg.className='lg-msg'; msg.textContent='Não foi possível enviar: '+e.code; }
+}
+function nuvemSair(){
+  if(!confirm('Sair do sistema? Os dados continuam salvos na nuvem.')) return;
+  try{ ['ziran-dados','ziran-org5','ziran-setor-cores'].forEach(k=>localStorage.removeItem(k)); }catch(e){}
+  nuvemAuth.signOut().then(()=>location.reload());
+}
+
+/* ── Inicialização ── */
+if(NUVEM_ATIVA){
+  firebase.initializeApp(FIREBASE_CONFIG);
+  nuvemAuth=firebase.auth();
+  nuvemDb=firebase.firestore();
+  document.getElementById('login-gate').classList.remove('hide');
+  nuvemAuth.onAuthStateChanged(u=>{
+    const gate=document.getElementById('login-gate');
+    if(u){
+      gate.classList.add('hide');
+      const h=document.querySelector('.header');
+      if(!document.getElementById('nuvem-user')){
+        const s=document.createElement('span'); s.id='nuvem-user'; h.appendChild(s);
+        const b=document.createElement('button'); b.id='nuvem-sair'; b.textContent='Sair'; b.onclick=nuvemSair; h.appendChild(b);
+      }
+      document.getElementById('nuvem-user').textContent=u.email;
+      nuvemEscutar();
+    } else {
+      if(nuvemUnsub){ nuvemUnsub(); nuvemUnsub=null; }
+      nuvemPronto=false;
+      gate.classList.remove('hide');
+    }
+  });
+} else {
+  setTimeout(()=>nuvemStatus('💾 Modo local (sem nuvem)',''),0);
+}
+</script>
+
+</body>
+</html>
